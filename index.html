@@ -269,6 +269,41 @@
   }
   .perp-conclusion strong { color: var(--primary); }
 
+  /* 分享弹窗 */
+  .share-modal-overlay {
+    position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+    background: rgba(0,0,0,0.4); display: none; align-items: center; justify-content: center; z-index: 1000;
+  }
+  .share-modal-overlay.show { display: flex; }
+  .share-modal {
+    background: #fff; border-radius: 16px; padding: 24px; max-width: 440px; width: 90%;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.15);
+  }
+  .share-modal h3 { font-size: 17px; margin-bottom: 8px; }
+  .share-modal .share-desc { font-size: 13px; color: var(--text-light); margin-bottom: 12px; }
+  .share-tip { font-size: 12px; color: var(--accent); background: var(--time-bg); padding: 8px 12px; border-radius: 6px; margin-bottom: 12px; line-height: 1.5; }
+  .share-link-box {
+    display: flex; gap: 8px; align-items: center;
+    background: #f5f3ee; border-radius: 8px; padding: 10px 12px; margin-bottom: 12px;
+  }
+  .share-link-box input {
+    flex: 1; border: none; background: transparent; font-size: 12px; color: var(--text);
+  }
+  .share-link-box input:focus { outline: none; }
+  .copy-btn {
+    padding: 6px 14px; background: var(--primary); color: #fff; border: none;
+    border-radius: 6px; font-size: 13px; cursor: pointer; flex-shrink: 0; white-space: nowrap;
+  }
+  .copy-btn:hover { background: var(--primary-dark); }
+  .copy-btn.copied { background: var(--accent); }
+  .share-modal .close-btn {
+    width: 100%; padding: 10px; border: 1px solid var(--border); background: #fff;
+    border-radius: 8px; font-size: 14px; cursor: pointer; color: var(--text-light);
+  }
+  .share-modal .close-btn:hover { background: #f5f3ee; }
+  .icon-btn.share-icon { font-size: 14px; }
+  .icon-btn.share-icon:hover { background: var(--accent); }
+
   @media (max-width: 600px) {
     .header h1 { font-size: 18px; }
     .shop-fields { grid-template-columns: 1fr 1fr; }
@@ -287,6 +322,7 @@
 
   <div class="toolbar">
     <button class="tool-btn" onclick="loadExample()">📋 载入示例</button>
+    <button class="tool-btn" onclick="generateShareAllCode()">🔗 分享全部店铺</button>
     <button class="tool-btn" onclick="clearAll()">🗑️ 清空当前列表</button>
   </div>
 
@@ -354,6 +390,20 @@
     </details>
   </div>
 
+</div>
+
+<!-- 分享弹窗 -->
+<div class="share-modal-overlay" id="shareModal" onclick="if(event.target===this)closeShareModal()">
+  <div class="share-modal">
+    <h3 id="shareModalTitle">分享店铺</h3>
+    <p class="share-desc">将以下链接发给好友，对方打开后即可加载店铺数据到自己的计算器：</p>
+    <div class="share-tip">💡 对方打开链接后，店铺数据会自动添加到列表中（不覆盖已有数据）。适合发到小红书/微信群分享。</div>
+    <div class="share-link-box">
+      <input type="text" id="shareLinkInput" readonly>
+      <button class="copy-btn" id="copyBtn" onclick="copyShareLink()">复制链接</button>
+    </div>
+    <button class="close-btn" onclick="closeShareModal()">关闭</button>
+  </div>
 </div>
 
 <script>
@@ -653,6 +703,7 @@ function renderShops() {
         </select>
         <div class="shop-actions">
           <button class="icon-btn save-btn" title="保存到店铺库" onclick="saveShopToLib(${i})">💾</button>
+          <button class="icon-btn share-icon" title="生成分享链接" onclick="generateShareCode(${i})">🔗</button>
           <button class="icon-btn" title="删除" onclick="removeShop(${i})">×</button>
         </div>
       </div>
@@ -1046,6 +1097,114 @@ function clearAll() {
   renderAll(); save();
 }
 
+// ===== 分享码功能（纯前端，数据编码在URL hash中） =====
+// UTF-8 安全的 base64 编解码
+function encodeShareData(data) {
+  var json = JSON.stringify(data);
+  var utf8 = encodeURIComponent(json).replace(/%([0-9A-F]{2})/g, function(m, p1) { return String.fromCharCode('0x' + p1); });
+  return btoa(utf8);
+}
+function decodeShareData(str) {
+  var binary = atob(str);
+  var utf8 = decodeURIComponent(Array.prototype.map.call(binary, function(c) { return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2); }).join(''));
+  return JSON.parse(utf8);
+}
+
+// 生成单店分享链接
+function generateShareCode(idx) {
+  var shop = state.shops[idx];
+  if (!shop || !shop.name.trim()) { alert('请先填写店铺名称再分享'); return; }
+  var clean = JSON.parse(JSON.stringify(shop));
+  var data = { v: 1, type: 'shop', shop: clean };
+  var encoded = encodeShareData(data);
+  var base = window.location.href.split('#')[0];
+  var link = base + '#s=' + encoded;
+  showShareModal(link, '分享店铺「' + shop.name + '」');
+}
+
+// 生成全部店铺分享链接
+function generateShareAllCode() {
+  if (state.shops.length === 0) { alert('当前没有店铺可分享'); return; }
+  var cleanShops = state.shops.map(function(s) { return JSON.parse(JSON.stringify(s)); });
+  var data = { v: 1, type: 'shops', shops: cleanShops };
+  var encoded = encodeShareData(data);
+  var base = window.location.href.split('#')[0];
+  var link = base + '#s=' + encoded;
+  showShareModal(link, '分享全部店铺（' + state.shops.length + '家）');
+}
+
+// 显示分享弹窗
+function showShareModal(link, title) {
+  document.getElementById('shareModalTitle').textContent = title;
+  document.getElementById('shareLinkInput').value = link;
+  document.getElementById('shareModal').classList.add('show');
+  var btn = document.getElementById('copyBtn');
+  btn.textContent = '复制链接';
+  btn.classList.remove('copied');
+  setTimeout(function() {
+    var input = document.getElementById('shareLinkInput');
+    input.focus();
+    input.select();
+  }, 100);
+}
+
+function closeShareModal() {
+  document.getElementById('shareModal').classList.remove('show');
+}
+
+function copyShareLink() {
+  var input = document.getElementById('shareLinkInput');
+  input.select();
+  input.setSelectionRange(0, 99999);
+  var btn = document.getElementById('copyBtn');
+  try {
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(input.value).then(function() {
+        btn.textContent = '已复制 ✓';
+        btn.classList.add('copied');
+      }).catch(function() { fallbackCopy(input, btn); });
+    } else {
+      fallbackCopy(input, btn);
+    }
+  } catch(e) { fallbackCopy(input, btn); }
+}
+
+function fallbackCopy(input, btn) {
+  try {
+    document.execCommand('copy');
+    btn.textContent = '已复制 ✓';
+    btn.classList.add('copied');
+  } catch(e) {
+    alert('复制失败，请手动选中链接并复制');
+  }
+}
+
+// 页面加载时检测URL hash，自动加载分享数据
+function loadFromHash() {
+  var hash = window.location.hash;
+  if (!hash || hash.indexOf('#s=') !== 0) return;
+  var encoded = hash.substring(3);
+  try {
+    var data = decodeShareData(encoded);
+    if (data.type === 'shop' && data.shop) {
+      var shop = Object.assign(defaultShop(), data.shop);
+      state.shops.push(shop);
+      renderAll(); save();
+      history.replaceState(null, '', window.location.pathname + window.location.search);
+      alert('已从分享链接加载店铺「' + (shop.name || '未命名') + '」\n数据已添加到列表底部');
+    } else if (data.type === 'shops' && data.shops) {
+      data.shops.forEach(function(s) {
+        state.shops.push(Object.assign(defaultShop(), s));
+      });
+      renderAll(); save();
+      history.replaceState(null, '', window.location.pathname + window.location.search);
+      alert('已从分享链接加载 ' + data.shops.length + ' 家店铺\n数据已添加到列表底部');
+    }
+  } catch(e) {
+    console.error('Failed to load share data:', e);
+  }
+}
+
 // ===== 持久化 =====
 function save() { try { localStorage.setItem('wenchuang_calc_v5', JSON.stringify(state)); } catch(e) {} }
 function load() {
@@ -1096,6 +1255,7 @@ function escapeAttr(s) { return escapeHtml(s); }
 setInterval(() => { state.shops.forEach((s, i) => { if (s.timeEnabled) updateTimeStatus(i, s); }); renderResults(); }, 60000);
 
 load();
+loadFromHash();
 </script>
 
 </body>
