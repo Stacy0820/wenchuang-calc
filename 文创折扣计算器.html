@@ -1,0 +1,1102 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>文创折扣对比计算器</title>
+<style>
+  :root {
+    --bg: #f7f5f0;
+    --card-bg: #ffffff;
+    --primary: #c75b39;
+    --primary-light: #e89a7f;
+    --primary-dark: #a8442a;
+    --accent: #2d6a4f;
+    --accent-light: #52b788;
+    --text: #2b2b2b;
+    --text-light: #6b6b6b;
+    --border: #e0ddd5;
+    --best: #ffd60a;
+    --gift-bg: #fef6f0;
+    --manjian-bg: #f0f4ff;
+    --bonus-bg: #f4f0ff;
+    --time-bg: #f0f6f4;
+    --shadow: 0 2px 8px rgba(0,0,0,0.06);
+    --radius: 12px;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: -apple-system, "PingFang SC", "Microsoft YaHei", "Helvetica Neue", sans-serif;
+    background: var(--bg); color: var(--text); line-height: 1.6; padding: 0;
+  }
+  .header {
+    background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+    color: #fff; padding: 24px 20px 20px; text-align: center;
+  }
+  .header h1 { font-size: 22px; font-weight: 700; margin-bottom: 4px; }
+  .header p { font-size: 13px; opacity: 0.9; }
+  .container { max-width: 960px; margin: 0 auto; padding: 16px; }
+
+  .shops-list { display: flex; flex-direction: column; gap: 12px; margin-bottom: 16px; }
+  .shop-card {
+    background: var(--card-bg); border-radius: var(--radius); box-shadow: var(--shadow);
+    padding: 16px; position: relative;
+  }
+  .shop-card.best {
+    border: 2px solid var(--best);
+    box-shadow: 0 0 0 3px rgba(255,214,10,0.25), var(--shadow);
+  }
+  .shop-card .shop-header {
+    display: flex; align-items: center; gap: 8px; margin-bottom: 12px; flex-wrap: wrap;
+  }
+  .shop-num {
+    background: var(--primary); color: #fff; width: 24px; height: 24px;
+    border-radius: 50%; display: inline-flex; align-items: center; justify-content: center;
+    font-size: 12px; font-weight: 700; flex-shrink: 0;
+  }
+  .shop-card.best .shop-num { background: #b8860b; }
+  .shop-name-input {
+    flex: 1; min-width: 100px; border: none; border-bottom: 2px solid var(--border);
+    font-size: 16px; font-weight: 600; padding: 4px 2px; background: transparent;
+  }
+  .shop-name-input:focus { outline: none; border-bottom-color: var(--primary); }
+  .style-select {
+    padding: 4px 8px; border: 1px solid var(--border); border-radius: 6px;
+    font-size: 13px; background: var(--gift-bg); color: var(--primary-dark);
+    max-width: 100px;
+  }
+  .shop-actions { display: flex; gap: 6px; }
+  .icon-btn {
+    background: #eee; color: #999; border: none; width: 28px; height: 28px;
+    border-radius: 50%; cursor: pointer; font-size: 15px; flex-shrink: 0; transition: all 0.2s;
+    display: inline-flex; align-items: center; justify-content: center;
+  }
+  .icon-btn:hover { background: var(--primary); color: #fff; }
+  .icon-btn.save-btn { font-size: 13px; }
+  .icon-btn.save-btn:hover { background: var(--accent); }
+
+  .shop-fields {
+    display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 10px;
+  }
+  .field { display: flex; flex-direction: column; gap: 4px; }
+  .field label { font-size: 12px; color: var(--text-light); }
+  .field input, .field select {
+    padding: 8px 10px; border: 1px solid var(--border); border-radius: 8px; font-size: 14px; width: 100%;
+  }
+  .field input:focus { outline: none; border-color: var(--primary); }
+  .field .sub-hint { font-size: 11px; color: #aaa; }
+
+  .paid-display {
+    grid-column: 1 / -1;
+    background: linear-gradient(135deg, var(--gift-bg), #fff8f5);
+    border: 1px solid var(--primary-light);
+    border-radius: 10px;
+    padding: 12px 16px;
+    display: flex; align-items: center; gap: 12px; flex-wrap: wrap;
+  }
+  .paid-display .paid-label { font-size: 13px; color: var(--text-light); font-weight: 600; }
+  .paid-display .paid-tag { font-size: 13px; color: var(--accent); background: rgba(45,106,79,0.1); padding: 3px 10px; border-radius: 6px; font-weight: 600; }
+  .paid-display .paid-input {
+    font-size: 20px; font-weight: 700; color: var(--primary);
+    border: 2px solid var(--primary-light); border-radius: 8px;
+    padding: 6px 12px; width: 130px; text-align: center; background: #fff;
+  }
+  .paid-display .paid-input:focus { outline: none; border-color: var(--primary); }
+  .paid-display .paid-extra { flex-basis: 100%; font-size: 13px; color: var(--text-light); border-top: 1px dashed var(--border); padding-top: 8px; margin-top: 4px; }
+  .paid-display .paid-extra strong { color: var(--accent); font-weight: 700; }
+  .paid-display .paid-extra .net-paid-badge {
+    display: inline-block; background: linear-gradient(135deg, var(--accent-light), var(--accent));
+    color: #fff; font-weight: 700; font-size: 14px; padding: 2px 10px; border-radius: 6px;
+  }
+  .paid-display .paid-extra .metric-new { color: var(--primary); font-weight: 700; }
+
+  .promo-toggles-row { display: flex; gap: 16px; flex-wrap: wrap; grid-column: 1 / -1; align-items: flex-end; }
+  .promo-toggles-row .field { flex: 0 0 auto; min-width: 100px; }
+
+  .promo-section { margin-top: 14px; padding-top: 14px; border-top: 1px dashed var(--border); }
+  .promo-title { font-size: 13px; font-weight: 600; color: var(--text); margin-bottom: 8px; }
+  .promo-toggle { display: flex; gap: 6px; flex-wrap: wrap; align-items: center; margin-bottom: 10px; }
+  .promo-toggle label { font-size: 12px; color: var(--text-light); }
+  .promo-toggle select { padding: 5px 8px; border: 1px solid var(--border); border-radius: 6px; font-size: 12px; }
+  .tier-list { display: flex; flex-direction: column; gap: 6px; }
+  .tier-row {
+    display: flex; gap: 6px; align-items: center; flex-wrap: wrap;
+    padding: 8px 10px; border-radius: 8px;
+  }
+  .tier-row.gift-row { background: var(--gift-bg); }
+  .tier-row.mj-row { background: var(--manjian-bg); }
+  .tier-row.bonus-row { background: var(--bonus-bg); }
+  .tier-row .t-label { font-size: 12px; color: var(--text-light); white-space: nowrap; }
+  .tier-row input { width: 70px; padding: 6px 8px; border: 1px solid var(--border); border-radius: 6px; font-size: 13px; }
+  .tier-row input.wide { width: 90px; }
+  .tier-del { background: #eee; color: #999; border: none; width: 22px; height: 22px; border-radius: 50%; cursor: pointer; font-size: 13px; flex-shrink: 0; }
+  .tier-del:hover { background: #e74c3c; color: #fff; }
+  .add-tier-btn {
+    margin-top: 6px; padding: 6px 12px; border: 1px dashed var(--primary-light);
+    background: transparent; border-radius: 6px; font-size: 12px; color: var(--primary); cursor: pointer;
+  }
+  .add-tier-btn:hover { background: var(--gift-bg); }
+
+  .time-section { margin-top: 14px; padding-top: 14px; border-top: 1px dashed var(--border); }
+  .time-toggle-btn {
+    font-size: 12px; color: var(--accent); background: none; border: 1px dashed var(--accent-light);
+    padding: 5px 10px; border-radius: 6px; cursor: pointer;
+  }
+  .time-toggle-btn:hover { background: var(--time-bg); }
+  .cal-btn {
+    font-size: 12px; padding: 6px 12px; border: 1px solid var(--accent-light);
+    background: var(--time-bg); border-radius: 6px; cursor: pointer; color: var(--accent);
+    transition: all 0.2s;
+  }
+  .cal-btn:hover { background: var(--accent-light); color: #fff; }
+  .time-fields {
+    margin-top: 10px; background: var(--time-bg); padding: 12px; border-radius: 8px;
+    display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 10px;
+  }
+  .time-fields .field input { font-size: 13px; }
+  .time-status {
+    font-size: 12px; padding: 6px 10px; border-radius: 6px; margin-top: 8px; display: none;
+  }
+  .time-status.show { display: block; }
+  .time-status.ongoing { background: #d4edda; color: #155724; }
+  .time-status.upcoming { background: #fff3cd; color: #856404; }
+  .time-status.ended { background: #f8d7da; color: #721c24; }
+
+  .add-shop-btn {
+    width: 100%; padding: 14px; border: 2px dashed var(--border); background: transparent;
+    border-radius: var(--radius); font-size: 15px; font-weight: 600; color: var(--text-light);
+    cursor: pointer; transition: all 0.2s; margin-bottom: 16px;
+  }
+  .add-shop-btn:hover { border-color: var(--primary); color: var(--primary); background: rgba(199,91,57,0.05); }
+
+  .saved-panel {
+    background: var(--card-bg); border-radius: var(--radius); box-shadow: var(--shadow);
+    margin-bottom: 16px; overflow: hidden;
+  }
+  .saved-panel-header {
+    padding: 14px 16px; cursor: pointer; display: flex; align-items: center; gap: 8px;
+    font-weight: 600; font-size: 15px; color: var(--text);
+  }
+  .saved-panel-header .arrow { transition: transform 0.2s; color: var(--text-light); }
+  .saved-panel.open .arrow { transform: rotate(90deg); }
+  .saved-panel-body { display: none; padding: 0 16px 16px; }
+  .saved-panel.open .saved-panel-body { display: block; }
+  .saved-count { font-size: 12px; color: var(--text-light); margin-left: auto; }
+  .saved-empty { font-size: 13px; color: var(--text-light); text-align: center; padding: 16px; }
+  .saved-item {
+    display: flex; align-items: center; gap: 10px; padding: 10px 12px;
+    background: #fafaf7; border-radius: 8px; margin-bottom: 8px; flex-wrap: wrap;
+  }
+  .saved-item .si-name { font-weight: 600; font-size: 14px; min-width: 80px; }
+  .saved-item .si-info { font-size: 12px; color: var(--text-light); flex: 1; }
+  .saved-item .si-btns { display: flex; gap: 6px; }
+  .si-btn {
+    padding: 5px 10px; border: 1px solid var(--border); background: #fff; border-radius: 6px;
+    font-size: 12px; cursor: pointer; color: var(--text);
+  }
+  .si-btn:hover { border-color: var(--primary); color: var(--primary); }
+  .si-btn.del:hover { border-color: #e74c3c; color: #e74c3c; }
+
+  .results {
+    background: var(--card-bg); border-radius: var(--radius); box-shadow: var(--shadow);
+    padding: 20px; margin-bottom: 16px;
+  }
+  .results h2 { font-size: 17px; margin-bottom: 14px; color: var(--text); }
+  .conclusion {
+    background: linear-gradient(135deg, rgba(45,106,79,0.08), rgba(82,183,136,0.08));
+    border-left: 4px solid var(--accent); padding: 14px 16px; border-radius: 8px;
+    margin-bottom: 16px; font-size: 14px;
+  }
+  .conclusion strong { color: var(--accent); }
+  .conclusion .highlight { color: var(--primary); font-weight: 700; }
+  .gift-detail {
+    margin-top: 10px; padding: 10px 12px; background: #fafaf7; border-radius: 8px;
+    font-size: 12px; color: var(--text-light); line-height: 1.7;
+  }
+  .gift-detail .shop-name { font-weight: 600; color: var(--text); }
+
+  .result-table-wrap { overflow-x: auto; }
+  table.result-table { width: 100%; border-collapse: collapse; font-size: 13px; min-width: 880px; }
+  table.result-table th {
+    background: #f5f3ee; padding: 10px 8px; text-align: right; font-weight: 600;
+    color: var(--text-light); border-bottom: 2px solid var(--border); white-space: nowrap;
+  }
+  table.result-table th:first-child { text-align: left; }
+  table.result-table td { padding: 10px 8px; text-align: right; border-bottom: 1px solid var(--border); }
+  table.result-table td:first-child { text-align: left; font-weight: 600; }
+  table.result-table tr.best td { background: rgba(255,214,10,0.12); }
+  table.result-table tr.best td:first-child::before { content: "🏆 "; }
+  .sort-btn { background: none; border: none; cursor: pointer; font-size: 11px; color: var(--text-light); display: block; margin-top: 2px; }
+  .sort-btn:hover { color: var(--primary); }
+
+  .chart-section { margin-top: 20px; }
+  .chart-section h3 { font-size: 14px; margin-bottom: 10px; color: var(--text-light); }
+  .chart { display: flex; flex-direction: column; gap: 8px; }
+  .bar-row { display: flex; align-items: center; gap: 8px; font-size: 13px; }
+  .bar-label { width: 80px; text-align: right; flex-shrink: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .bar-track { flex: 1; background: #f0ede5; border-radius: 6px; height: 24px; position: relative; overflow: hidden; }
+  .bar-fill {
+    height: 100%; border-radius: 6px; display: flex; align-items: center; justify-content: flex-end;
+    padding-right: 8px; color: #fff; font-size: 12px; font-weight: 600; transition: width 0.4s ease; min-width: 2px;
+  }
+  .bar-fill.primary { background: linear-gradient(90deg, var(--primary-light), var(--primary)); }
+  .bar-fill.accent { background: linear-gradient(90deg, var(--accent-light), var(--accent)); }
+  .bar-fill.best { background: linear-gradient(90deg, #ffd60a, #b8860b); }
+
+  .toolbar { display: flex; gap: 8px; margin-bottom: 16px; flex-wrap: wrap; }
+  .tool-btn {
+    padding: 8px 14px; border: 1px solid var(--border); background: #fff; border-radius: 8px;
+    font-size: 13px; cursor: pointer; color: var(--text-light); transition: all 0.2s;
+  }
+  .tool-btn:hover { border-color: var(--primary); color: var(--primary); }
+
+  .formula-note {
+    background: #fff; border-radius: var(--radius); box-shadow: var(--shadow); padding: 16px;
+    font-size: 13px; color: var(--text-light); line-height: 1.8;
+  }
+  .formula-note details summary { cursor: pointer; font-weight: 600; color: var(--text); }
+  .formula-note ul { margin: 10px 0 0 18px; }
+  .formula-note li { margin-bottom: 4px; }
+  .formula-note code { background: #f5f3ee; padding: 2px 6px; border-radius: 4px; color: var(--primary); }
+
+  .style-tag {
+    display: inline-block; font-size: 11px; padding: 1px 6px; border-radius: 4px;
+    background: var(--gift-bg); color: var(--primary-dark); margin-left: 4px;
+  }
+  .perp-conclusion {
+    margin-top: 12px; padding: 12px 14px; background: #fff8f0; border-radius: 8px;
+    font-size: 13px; border-left: 4px solid var(--primary);
+  }
+  .perp-conclusion strong { color: var(--primary); }
+
+  @media (max-width: 600px) {
+    .header h1 { font-size: 18px; }
+    .shop-fields { grid-template-columns: 1fr 1fr; }
+    .bar-label { width: 60px; font-size: 12px; }
+  }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <h1>文创折扣对比计算器</h1>
+  <p>输入各店实付总价，对比折扣、满赠、满减、赠礼，哪家更划算一算便知</p>
+</div>
+
+<div class="container">
+
+  <div class="toolbar">
+    <button class="tool-btn" onclick="loadExample()">📋 载入示例</button>
+    <button class="tool-btn" onclick="clearAll()">🗑️ 清空当前列表</button>
+  </div>
+
+  <!-- 已保存店铺库 -->
+  <div class="saved-panel" id="savedPanel">
+    <div class="saved-panel-header" onclick="toggleSavedPanel()">
+      <span class="arrow">▶</span>
+      <span>📦 已保存店铺</span>
+      <span class="saved-count" id="savedCount"></span>
+    </div>
+    <div class="saved-panel-body" id="savedBody"></div>
+  </div>
+
+  <!-- 店铺列表 -->
+  <div class="shops-list" id="shopsList"></div>
+  <button class="add-shop-btn" onclick="addShop()">+ 添加店铺</button>
+
+  <!-- 结果区 -->
+  <div class="results" id="results" style="display:none;">
+    <h2>📊 对比结果</h2>
+    <div class="conclusion" id="conclusion"></div>
+    <div class="perp-conclusion" id="perPConclusion"></div>
+    <div class="gift-detail" id="giftDetail"></div>
+    <div class="result-table-wrap">
+      <table class="result-table" id="resultTable"></table>
+    </div>
+    <div class="chart-section">
+      <h3>物品总值对比</h3>
+      <div class="chart" id="chartValue"></div>
+    </div>
+    <div class="chart-section">
+      <h3>实际折扣率对比（越低越划算）</h3>
+      <div class="chart" id="chartDiscount"></div>
+    </div>
+    <div class="chart-section">
+      <h3>每P均价对比（越低越划算）</h3>
+      <div class="chart" id="chartPerP"></div>
+    </div>
+    <div class="chart-section">
+      <h3>综合折后每P实付对比（全优惠均摊，越低越划算）</h3>
+      <div class="chart" id="chartEffPerP"></div>
+    </div>
+  </div>
+
+  <div class="formula-note">
+    <details>
+      <summary>📐 计算公式说明（点击展开）</summary>
+      <ul>
+        <li><strong>实付总价</strong> = 手动输入打折后的总消费金额（满减前，可能买了多个稿图+散件）</li>
+        <li><strong>大食量set原价</strong> = 店主设定的单套原价（定价参考，set内含卡头卡背折页等10P散件）</li>
+        <li><strong>折扣</strong> = 店铺折扣率，如0.8=八折</li>
+        <li><strong>可获原价</strong> = 实付总价 ÷ 折扣（按折扣反推买到的原价商品总额）</li>
+        <li><strong>满减</strong>：基于实付总价判断，达到门槛直接减免，只取最高档使用一次（无叠加）。满减后净支付 = 实付总价 − 满减金额</li>
+        <li><strong>大食量set实付</strong> = set原价 × 折扣（单套实付价格）</li>
+        <li><strong>每P均价</strong> = 大食量set实付 ÷ 10P（基于set定价的每P价格，大食量set固定10P）</li>
+        <li><strong>综合折后每P实付</strong> = 大食量set原价 × 实际折扣率 ÷ 10P（将满减/满赠/赠礼/小礼物等全部优惠折算为实际折扣率后，等价分摊到每P的实付价格。比每P均价更能体现一系列折扣均摊后单P价格的下降）</li>
+        <li><strong>小礼物价值</strong> = 实付总价 × 小礼物比例（按实付总价的百分比赠送）</li>
+        <li><strong>满赠</strong>：基于实付总价金额判断，达到门槛赠送品。两个独立开关——「可叠加」(各达标档都送) + 「可循环」(按倍数重复送)，可任意组合</li>
+        <li><strong>赠礼</strong>：宣传礼、小时礼、首日礼等条件赠品，填入类型+具体名称+原价（如"宣传礼 / 10p豆丁贴 / ¥12"），价值计入物品总值</li>
+        <li><strong>物品总值</strong> = 可获原价 + 小礼物价值 + 满赠赠品原价 + 赠礼原价（满减不计入总值，而是降低净支付）</li>
+        <li><strong>实际折扣率</strong> = 净支付 ÷ 物品总值（满减后真正拿到的折扣，如7.25折）</li>
+        <li><strong>性价比</strong> = 物品总值 ÷ 净支付（每花1元换来的物品原价，越高越划算）</li>
+      </ul>
+      <p style="margin-top:10px;">💡 折扣填小数：8折填 <code>0.8</code>。折扣显示格式为"X折"（如7.25折）。大食量set固定10P。满减从实付总价中扣除得到净支付，再用净支付计算实际折扣率。</p>
+    </details>
+  </div>
+
+</div>
+
+<script>
+let state = {
+  shops: [],
+  saved: []
+};
+let sortBy = 'totalValue';
+let sortDesc = true;
+
+function defaultShop() {
+  return {
+    name: '',
+    style: '',
+    price: '',            // 大食量set原价（店主定价）
+    actualPaid: '',       // 实付总价（满减前）
+    discount: '0.8',      // 折扣，小数
+    giftRatio: '0.1',     // 小礼物比例
+    totalP: '10',         // 固定10P
+    // 满赠
+    giftEnabled: false,
+    giftMulti: false,
+    giftLoop: false,
+    thresholds: [],
+    // 满减（只取最高档一次，无叠加方式）
+    manJianEnabled: false,
+    manJianTiers: [],
+    // 赠礼
+    bonusEnabled: false,
+    bonusGifts: [],
+    // 活动时间
+    timeEnabled: false,
+    startTime: '',
+    endTime: '',
+    saleTime: ''
+  };
+}
+
+function addShop(data) {
+  state.shops.push(Object.assign(defaultShop(), data || {}));
+  renderShops(); renderResults(); save();
+}
+function removeShop(idx) {
+  state.shops.splice(idx, 1);
+  renderShops(); renderResults(); save();
+}
+
+// ===== 满赠档位 =====
+function addThreshold(idx) {
+  state.shops[idx].thresholds.push({ threshold: '', name: '', value: '' });
+  renderShops(); renderResults(); save();
+}
+function removeThreshold(shopIdx, tIdx) {
+  state.shops[shopIdx].thresholds.splice(tIdx, 1);
+  renderShops(); renderResults(); save();
+}
+
+// ===== 满减档位 =====
+function addManJian(idx) {
+  state.shops[idx].manJianTiers.push({ threshold: '', amount: '' });
+  renderShops(); renderResults(); save();
+}
+function removeManJian(shopIdx, tIdx) {
+  state.shops[shopIdx].manJianTiers.splice(tIdx, 1);
+  renderShops(); renderResults(); save();
+}
+
+// ===== 赠礼 =====
+function addBonus(idx) {
+  state.shops[idx].bonusGifts.push({ type: '', detail: '', value: '' });
+  renderShops(); renderResults(); save();
+}
+function removeBonus(shopIdx, tIdx) {
+  state.shops[shopIdx].bonusGifts.splice(tIdx, 1);
+  renderShops(); renderResults(); save();
+}
+
+function updateShop(idx, field, value) {
+  state.shops[idx][field] = value;
+  if (['giftEnabled','manJianEnabled','bonusEnabled','timeEnabled'].includes(field)) {
+    renderShops();
+  } else {
+    updatePaidDisplay(idx);
+  }
+  renderResults(); save();
+}
+function updateThreshold(shopIdx, tIdx, field, value) {
+  state.shops[shopIdx].thresholds[tIdx][field] = value;
+  updatePaidDisplay(shopIdx);
+  renderResults(); save();
+}
+function updateManJian(shopIdx, tIdx, field, value) {
+  state.shops[shopIdx].manJianTiers[tIdx][field] = value;
+  updatePaidDisplay(shopIdx);
+  renderResults(); save();
+}
+function updateBonus(shopIdx, tIdx, field, value) {
+  state.shops[shopIdx].bonusGifts[tIdx][field] = value;
+  updatePaidDisplay(shopIdx);
+  renderResults(); save();
+}
+
+// 折扣格式化：0.8→"8折"，0.75→"7.5折"，0.725→"7.25折"
+function fmtDiscount(d) {
+  const val = d * 10;
+  if (Math.abs(val % 1) < 0.001) return val.toFixed(0) + '折';
+  if (Math.abs((val * 10) % 1) < 0.001) return val.toFixed(1) + '折';
+  return val.toFixed(2) + '折';
+}
+
+// 局部刷新实付显示区（不重建DOM，避免输入框失焦）
+function updatePaidDisplay(i) {
+  const shop = state.shops[i];
+  if (!shop) return;
+  const av = parseFloat(shop.actualPaid) || 0;
+  const dv = parseFloat(shop.discount) || 0;
+  const comp = av > 0 && dv > 0 ? computeShop(shop) : null;
+  const labelStr = dv > 0 ? fmtDiscount(dv) : '';
+
+  const tagEl = document.getElementById(`paid-actual-${i}`);
+  if (tagEl) {
+    if (comp) {
+      tagEl.innerHTML = `标价${labelStr} → 实际<strong style="color:var(--accent)">${fmtDiscount(comp.realDiscount)}</strong>`;
+      tagEl.style.display = '';
+    } else if (labelStr) {
+      tagEl.textContent = `标价${labelStr}`;
+      tagEl.style.display = '';
+    } else {
+      tagEl.style.display = 'none';
+    }
+  }
+
+  const extraEl = document.getElementById(`paid-extra-${i}`);
+  if (extraEl) {
+    if (comp) {
+      const mjStr = comp.manJianTotal > 0 ? `满减¥${comp.manJianTotal.toFixed(2)} → 净付<span class="net-paid-badge">¥${comp.netPaid.toFixed(2)}</span> · ` : '';
+      extraEl.innerHTML = `${mjStr}每P均价 <strong>¥${comp.pricePerP.toFixed(2)}</strong> · 综合折后每P实付 <span class="metric-new">¥${comp.effectivePaidPerP.toFixed(2)}</span> · 物品总值<strong>¥${comp.totalValue.toFixed(2)}</strong>`;
+    } else {
+      extraEl.textContent = '填写实付总价和折扣后显示';
+    }
+  }
+}
+
+// ===== 保存店铺到店铺库 =====
+function saveShopToLib(idx) {
+  const shop = state.shops[idx];
+  if (!shop.name.trim()) { alert('请先填写店铺名称再保存'); return; }
+  const copy = JSON.parse(JSON.stringify(shop));
+  copy._savedAt = new Date().toLocaleString('zh-CN');
+  const existIdx = state.saved.findIndex(s => s.name === copy.name);
+  if (existIdx >= 0) { state.saved[existIdx] = copy; }
+  else { state.saved.push(copy); }
+  renderSavedPanel(); save();
+  alert('已保存「' + shop.name + '」到店铺库');
+}
+
+function loadShopFromLib(savedIdx) {
+  const shop = JSON.parse(JSON.stringify(state.saved[savedIdx]));
+  delete shop._savedAt;
+  state.shops.push(shop);
+  renderShops(); renderResults(); save();
+}
+
+function deleteSavedShop(idx) {
+  if (!confirm('确定从店铺库删除「' + state.saved[idx].name + '」？')) return;
+  state.saved.splice(idx, 1);
+  renderSavedPanel(); save();
+}
+
+function toggleSavedPanel() {
+  document.getElementById('savedPanel').classList.toggle('open');
+}
+function renderSavedPanel() {
+  const body = document.getElementById('savedBody');
+  const count = document.getElementById('savedCount');
+  count.textContent = state.saved.length > 0 ? `（${state.saved.length}家）` : '';
+  if (state.saved.length === 0) {
+    body.innerHTML = '<div class="saved-empty">暂无保存的店铺。点击店铺卡片右上角的 💾 可保存。</div>';
+    return;
+  }
+  body.innerHTML = state.saved.map((s, i) => {
+    const info = (s.style ? `[${escapeHtml(s.style)}] ` : '') + `set原价¥${s.price||'-'} / ${fmtDiscount(parseFloat(s.discount)||0)} / 小礼物${s.giftRatio||'0'}` +
+      (s.giftEnabled && s.thresholds.length ? ` / 满${s.thresholds.length}档赠` : '') +
+      (s.manJianEnabled && s.manJianTiers.length ? ` / 满${s.manJianTiers.length}档减` : '') +
+      (s.bonusEnabled && s.bonusGifts.length ? ` / ${s.bonusGifts.length}个赠礼` : '');
+    return `<div class="saved-item">
+      <span class="si-name">${escapeHtml(s.name)}</span>
+      <span class="si-info">${escapeHtml(info)}</span>
+      <div class="si-btns">
+        <button class="si-btn" onclick="loadShopFromLib(${i})">加入对比</button>
+        <button class="si-btn del" onclick="deleteSavedShop(${i})">删除</button>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+// ===== 渲染店铺卡片 =====
+function renderShops() {
+  const container = document.getElementById('shopsList');
+  container.innerHTML = '';
+  state.shops.forEach((shop, i) => {
+    const card = document.createElement('div');
+    card.className = 'shop-card';
+
+    // 实付总价输入区
+    const av = parseFloat(shop.actualPaid) || 0;
+    const dv = parseFloat(shop.discount) || 0;
+    const comp = av > 0 && dv > 0 ? computeShop(shop) : null;
+    const labelStr = dv > 0 ? fmtDiscount(dv) : '';
+    const actualTagStr = comp
+      ? `标价${labelStr} → 实际<strong style="color:var(--accent)">${fmtDiscount(comp.realDiscount)}</strong>`
+      : (labelStr ? `标价${labelStr}` : '');
+    const mjStr = comp && comp.manJianTotal > 0 ? `满减¥${comp.manJianTotal.toFixed(2)} → 净付<span class="net-paid-badge">¥${comp.netPaid.toFixed(2)}</span> · ` : '';
+    const extraStr = comp
+      ? `${mjStr}每P均价 <strong>¥${comp.pricePerP.toFixed(2)}</strong> · 综合折后每P实付 <span class="metric-new">¥${comp.effectivePaidPerP.toFixed(2)}</span> · 物品总值<strong>¥${comp.totalValue.toFixed(2)}</strong>`
+      : '填写实付总价和折扣后显示';
+    const paidSection = `<div class="paid-display"><span class="paid-label">实付总价</span><input type="number" min="0" class="paid-input" value="${shop.actualPaid}" placeholder="如200" oninput="updateShop(${i},'actualPaid',this.value)"><span class="paid-tag" id="paid-actual-${i}" style="${actualTagStr?'':'display:none'}">${actualTagStr}</span><span class="paid-extra" id="paid-extra-${i}">${extraStr}</span></div>`;
+
+    // 满赠区域
+    const giftSec = shop.giftEnabled ? `
+      <div class="promo-toggle">
+        <label><input type="checkbox" ${shop.giftMulti?'checked':''} onchange="updateShop(${i},'giftMulti',this.checked)"> 可叠加</label>
+        <label><input type="checkbox" ${shop.giftLoop?'checked':''} onchange="updateShop(${i},'giftLoop',this.checked)"> 可循环</label>
+      </div>
+      <div class="tier-list">
+        ${shop.thresholds.map((t, ti) => `
+          <div class="tier-row gift-row">
+            <span class="t-label">满</span>
+            <input type="number" min="0" value="${t.threshold}" placeholder="38" oninput="updateThreshold(${i},${ti},'threshold',this.value)">
+            <span class="t-label">送</span>
+            <input type="text" class="wide" value="${escapeAttr(t.name)}" placeholder="赠品名" oninput="updateThreshold(${i},${ti},'name',this.value)">
+            <span class="t-label">原价¥</span>
+            <input type="number" min="0" value="${t.value}" placeholder="15" oninput="updateThreshold(${i},${ti},'value',this.value)">
+            <button class="tier-del" onclick="removeThreshold(${i},${ti})">×</button>
+          </div>`).join('')}
+      </div>
+      <button class="add-tier-btn" onclick="addThreshold(${i})">+ 添加满赠档位</button>
+    ` : '';
+
+    // 满减区域（只取最高档一次，无叠加方式）
+    const mjSec = shop.manJianEnabled ? `
+      <div class="tier-list">
+        ${shop.manJianTiers.map((t, ti) => `
+          <div class="tier-row mj-row">
+            <span class="t-label">满</span>
+            <input type="number" min="0" value="${t.threshold}" placeholder="50" oninput="updateManJian(${i},${ti},'threshold',this.value)">
+            <span class="t-label">减¥</span>
+            <input type="number" min="0" value="${t.amount}" placeholder="5" oninput="updateManJian(${i},${ti},'amount',this.value)">
+            <button class="tier-del" onclick="removeManJian(${i},${ti})">×</button>
+          </div>`).join('')}
+      </div>
+      <button class="add-tier-btn" onclick="addManJian(${i})">+ 添加满减档位</button>
+    ` : '';
+
+    // 赠礼区域
+    const bonusSec = shop.bonusEnabled ? `
+      <div class="tier-list">
+        ${shop.bonusGifts.map((g, gi) => `
+          <div class="tier-row bonus-row">
+            <input type="text" value="${escapeAttr(g.type||'')}" placeholder="如 宣传礼" style="width:80px" oninput="updateBonus(${i},${gi},'type',this.value)">
+            <input type="text" class="wide" value="${escapeAttr(g.detail||'')}" placeholder="具体名称 如 10p豆丁贴" oninput="updateBonus(${i},${gi},'detail',this.value)">
+            <span class="t-label">原价¥</span>
+            <input type="number" min="0" value="${g.value}" placeholder="15" oninput="updateBonus(${i},${gi},'value',this.value)">
+            <button class="tier-del" onclick="removeBonus(${i},${gi})">×</button>
+          </div>`).join('')}
+      </div>
+      <button class="add-tier-btn" onclick="addBonus(${i})">+ 添加赠礼</button>
+    ` : '';
+
+    const timeSec = shop.timeEnabled ? `
+      <div class="time-fields">
+        <div class="field"><label>活动开始</label><input type="datetime-local" value="${shop.startTime}" onchange="updateShop(${i},'startTime',this.value)"></div>
+        <div class="field"><label>活动结束</label><input type="datetime-local" value="${shop.endTime}" onchange="updateShop(${i},'endTime',this.value)"></div>
+        <div class="field"><label>开售时间</label><input type="datetime-local" value="${shop.saleTime}" onchange="updateShop(${i},'saleTime',this.value)"></div>
+      </div>
+      <div class="cal-btns" style="margin-top:8px;display:flex;gap:8px;flex-wrap:wrap">
+        ${shop.startTime ? `<button class="cal-btn" onclick="downloadICS(${i},'start')">📅 活动开始提醒</button>` : ''}
+        ${shop.saleTime ? `<button class="cal-btn" onclick="downloadICS(${i},'sale')">⏰ 开售提醒</button>` : ''}
+      </div>
+      <div class="time-status" id="timeStatus-${i}"></div>
+    ` : '';
+
+    card.innerHTML = `
+      <div class="shop-header">
+        <span class="shop-num">${i+1}</span>
+        <input class="shop-name-input" type="text" value="${escapeHtml(shop.name)}" placeholder="店铺名称" oninput="updateShop(${i},'name',this.value)">
+        <select class="style-select" onchange="updateShop(${i},'style',this.value)">
+          <option value="">选择风格</option>
+          <option value="童话风" ${shop.style==='童话风'?'selected':''}>童话风</option>
+          <option value="食物系" ${shop.style==='食物系'?'selected':''}>食物系</option>
+          <option value="盐系" ${shop.style==='盐系'?'selected':''}>盐系</option>
+          <option value="复古风" ${shop.style==='复古风'?'selected':''}>复古风</option>
+          <option value="梦核" ${shop.style==='梦核'?'selected':''}>梦核</option>
+          <option value="新中式" ${shop.style==='新中式'?'selected':''}>新中式</option>
+          <option value="风景系" ${shop.style==='风景系'?'selected':''}>风景系</option>
+          <option value="其他" ${shop.style==='其他'?'selected':''}>其他</option>
+        </select>
+        <div class="shop-actions">
+          <button class="icon-btn save-btn" title="保存到店铺库" onclick="saveShopToLib(${i})">💾</button>
+          <button class="icon-btn" title="删除" onclick="removeShop(${i})">×</button>
+        </div>
+      </div>
+      <div class="shop-fields">
+        ${paidSection}
+        <div class="field"><label>大食量set原价 ¥</label><input type="number" min="0" value="${shop.price}" placeholder="如128" oninput="updateShop(${i},'price',this.value)"><span class="sub-hint">店主定价</span></div>
+        <div class="field"><label>折扣</label><input type="number" min="0" step="0.05" value="${shop.discount}" placeholder="如0.8" oninput="updateShop(${i},'discount',this.value)"><span class="sub-hint">0.8 = 八折</span></div>
+        <div class="field"><label>小礼物比例</label><input type="number" min="0" step="0.05" value="${shop.giftRatio}" placeholder="如0.1" oninput="updateShop(${i},'giftRatio',this.value)"><span class="sub-hint">0.1 = 实付10%</span></div>
+      </div>
+      <div class="promo-toggles-row">
+        <div class="field"><label>赠礼</label><select onchange="updateShop(${i},'bonusEnabled',this.value==='on')"><option value="off" ${!shop.bonusEnabled?'selected':''}>关闭</option><option value="on" ${shop.bonusEnabled?'selected':''}>开启</option></select></div>
+        <div class="field"><label>满赠</label><select onchange="updateShop(${i},'giftEnabled',this.value==='on')"><option value="off" ${!shop.giftEnabled?'selected':''}>关闭</option><option value="on" ${shop.giftEnabled?'selected':''}>开启</option></select></div>
+        <div class="field"><label>满减</label><select onchange="updateShop(${i},'manJianEnabled',this.value==='on')"><option value="off" ${!shop.manJianEnabled?'selected':''}>关闭</option><option value="on" ${shop.manJianEnabled?'selected':''}>开启</option></select></div>
+      </div>
+      <div class="promo-section">${bonusSec}</div>
+      <div class="promo-section">${giftSec}</div>
+      <div class="promo-section">${mjSec}</div>
+      <div class="time-section">
+        <button class="time-toggle-btn" onclick="updateShop(${i},'timeEnabled',!${shop.timeEnabled})">${shop.timeEnabled?'收起活动时间':'⏰ 设置活动时间'}</button>
+        ${timeSec}
+      </div>
+    `;
+    container.appendChild(card);
+    if (shop.timeEnabled) updateTimeStatus(i, shop);
+  });
+}
+
+// ===== 活动时间状态判断 =====
+function downloadICS(idx, type) {
+  const shop = state.shops[idx];
+  const dt = type === 'sale' ? shop.saleTime : shop.startTime;
+  if (!dt) return;
+  const date = new Date(dt);
+  if (isNaN(date.getTime())) return;
+  const pad = n => String(n).padStart(2, '0');
+  const fmtUTC = d => d.getUTCFullYear() + pad(d.getUTCMonth()+1) + pad(d.getUTCDate()) + 'T' + pad(d.getUTCHours()) + pad(d.getUTCMinutes()) + '00Z';
+  const dtStart = fmtUTC(date);
+  const dtEnd = fmtUTC(new Date(date.getTime() + 3600000));
+  const dtStamp = fmtUTC(new Date());
+  const uid = 'wenchuang-' + Date.now() + '-' + idx + '@calc';
+  const summary = type === 'sale' ? `⏰ ${shop.name||'店铺'} 开售提醒` : `📅 ${shop.name||'店铺'} 活动开始`;
+  const desc = (shop.name||'店铺') + ' ' + (type === 'sale' ? '开售时间' : '活动开始') + ' 提醒\\n由文创折扣对比计算器生成';
+  const ics = [
+    'BEGIN:VCALENDAR','VERSION:2.0','PRODID:-//文创折扣计算器//CN',
+    'CALSCALE:GREGORIAN','METHOD:PUBLISH',
+    'BEGIN:VEVENT','UID:' + uid,'DTSTAMP:' + dtStamp,
+    'DTSTART:' + dtStart,'DTEND:' + dtEnd,
+    'SUMMARY:' + summary,'DESCRIPTION:' + desc,
+    'BEGIN:VALARM','TRIGGER:-PT15M','ACTION:DISPLAY',
+    'DESCRIPTION:即将开始！','END:VALARM',
+    'END:VEVENT','END:VCALENDAR'
+  ].join('\r\n');
+  const blob = new Blob([ics], { type: 'text/calendar;charset=utf-8' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = (shop.name||'店铺') + '_' + (type==='sale'?'开售提醒':'活动开始') + '.ics';
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  setTimeout(function() { URL.revokeObjectURL(url); }, 1000);
+}
+
+function updateTimeStatus(i, shop) {
+  const el = document.getElementById(`timeStatus-${i}`);
+  if (!el) return;
+  const now = new Date();
+  const start = shop.startTime ? new Date(shop.startTime) : null;
+  const end = shop.endTime ? new Date(shop.endTime) : null;
+  const sale = shop.saleTime ? new Date(shop.saleTime) : null;
+  let cls = '', msg = '';
+  if (sale && now < sale) {
+    msg = '⏰ 距开售还有 ' + formatDuration(sale - now) + '（' + formatTime(sale) + '开售）';
+    cls = 'upcoming';
+  } else if (start && end) {
+    if (now < start) { msg = '⏳ 活动尚未开始，距开始还有 ' + formatDuration(start - now); cls = 'upcoming'; }
+    else if (now >= start && now <= end) { msg = '🔥 活动进行中，剩余 ' + formatDuration(end - now); cls = 'ongoing'; }
+    else { msg = '⛔ 活动已结束'; cls = 'ended'; }
+  } else if (start && now < start) { msg = '⏳ 距活动开始还有 ' + formatDuration(start - now); cls = 'upcoming'; }
+  else if (end && now > end) { msg = '⛔ 活动已结束'; cls = 'ended'; }
+  else if (end) { msg = '🔥 活动进行中，剩余 ' + formatDuration(end - now); cls = 'ongoing'; }
+  else { msg = '请设置活动起止时间'; cls = 'upcoming'; }
+  el.className = 'time-status show ' + cls;
+  el.textContent = msg;
+}
+
+function formatDuration(ms) {
+  if (ms <= 0) return '已到';
+  const d = Math.floor(ms / 86400000);
+  const h = Math.floor((ms % 86400000) / 3600000);
+  const min = Math.floor((ms % 3600000) / 60000);
+  let parts = [];
+  if (d > 0) parts.push(d + '天');
+  if (h > 0) parts.push(h + '小时');
+  if (min > 0) parts.push(min + '分钟');
+  return parts.join('') || '不足1分钟';
+}
+function formatTime(d) {
+  return d.toLocaleString('zh-CN', { month:'2-digit', day:'2-digit', hour:'2-digit', minute:'2-digit' });
+}
+
+// ===== 通用叠加计算（满赠/满减共用） =====
+function computeStack(tiers, paid, multi, loop, isAmount) {
+  let total = 0;
+  let breakdown = [];
+  const valid = tiers
+    .map(t => ({ threshold: parseFloat(t.threshold)||0, amount: parseFloat(isAmount ? t.amount : t.value)||0, name: t.name||'' }))
+    .filter(t => t.threshold > 0 && t.amount > 0)
+    .sort((a, b) => a.threshold - b.threshold);
+  if (multi) {
+    // 可叠加：各达标档都送
+    valid.forEach(t => {
+      if (paid >= t.threshold) {
+        const times = loop ? Math.floor(paid / t.threshold) : 1;
+        total += t.amount * times;
+        for (let n = 0; n < times; n++) breakdown.push(t);
+      }
+    });
+  } else {
+    // 不叠加：只取最高达标档
+    for (let k = valid.length - 1; k >= 0; k--) {
+      if (paid >= valid[k].threshold) {
+        const times = loop ? Math.floor(paid / valid[k].threshold) : 1;
+        total += valid[k].amount * times;
+        for (let n = 0; n < times; n++) breakdown.push(valid[k]);
+        break;
+      }
+    }
+  }
+  return { total, breakdown };
+}
+
+// ===== 核心计算 =====
+function computeShop(shop) {
+  const ap = parseFloat(shop.actualPaid);
+  if (!ap || ap <= 0) return null;
+
+  const d = parseFloat(shop.discount) || 0;
+  const P = parseFloat(shop.price) || 0;
+
+  // paid = 实付总价（满减前）
+  const paid = ap;
+
+  // 可获原价 = 实付 / 折扣
+  const productPrice = d > 0 ? paid / d : paid;
+
+  // 大食量set实付 = set原价 × 折扣
+  const setPaid = P > 0 && d > 0 ? P * d : 0;
+
+  // 小礼物价值
+  const giftRatio = parseFloat(shop.giftRatio) || 0;
+  const smallGiftValue = paid * giftRatio;
+
+  // 满赠：多档叠加（各档都送）+ 循环赠送（按倍数重复），两个独立开关
+  const manGift = shop.giftEnabled ? computeStack(shop.thresholds, paid, shop.giftMulti, shop.giftLoop, false) : { total: 0, breakdown: [] };
+
+  // 满减（只取最高档，使用一次）
+  let manJianTotal = 0;
+  let manJianBreakdown = [];
+  if (shop.manJianEnabled && shop.manJianTiers.length > 0) {
+    const jTiers = shop.manJianTiers
+      .map(t => ({ threshold: parseFloat(t.threshold)||0, amount: parseFloat(t.amount)||0 }))
+      .filter(t => t.threshold > 0 && t.amount > 0)
+      .sort((a, b) => a.threshold - b.threshold);
+    for (let k = jTiers.length - 1; k >= 0; k--) {
+      if (paid >= jTiers[k].threshold) { manJianTotal = jTiers[k].amount; manJianBreakdown.push(jTiers[k]); break; }
+    }
+  }
+
+  // 赠礼
+  let bonusGiftTotal = 0;
+  let bonusGiftBreakdown = [];
+  if (shop.bonusEnabled && shop.bonusGifts.length > 0) {
+    shop.bonusGifts.forEach(g => {
+      const val = parseFloat(g.value) || 0;
+      if (val > 0) {
+        const label = (g.type || '赠礼') + (g.detail ? `（${g.detail}）` : '');
+        bonusGiftTotal += val;
+        bonusGiftBreakdown.push({ name: label, value: val });
+      }
+    });
+  }
+
+  const netPaid = paid - manJianTotal;
+  const giftTotal = smallGiftValue + manGift.total;
+  const totalValue = productPrice + giftTotal + bonusGiftTotal;
+  const realDiscount = totalValue > 0 ? netPaid / totalValue : 1;
+  const labelDiscount = d;
+  const extraSaving = labelDiscount - realDiscount;
+  const valuePerYuan = netPaid > 0 ? totalValue / netPaid : 0;
+
+  const totalP = 10;
+  const pricePerP = setPaid > 0 ? setPaid / totalP : 0;
+  const valuePerP = totalValue > 0 ? totalValue / totalP : 0;
+  // 综合折后每P实付 = 大食量set原价 × 实际折扣率 ÷ 10P
+  // 将全部优惠（满减/满赠/赠礼/小礼物）折算为实际折扣率后，等价分摊到每P
+  const effectivePaidPerP = P > 0 && totalValue > 0 ? P * realDiscount / totalP : 0;
+
+  return {
+    name: shop.name || '未命名店铺',
+    style: shop.style || '',
+    paid, netPaid, productPrice, setPaid, setPrice: P, smallGiftValue,
+    manGiftTotal: manGift.total, manGiftBreakdown: manGift.breakdown,
+    manJianTotal, manJianBreakdown,
+    bonusGiftTotal, bonusGiftBreakdown,
+    giftTotal, totalValue,
+    realDiscount, extraSaving, valuePerYuan,
+    giftRatio, labelDiscount,
+    giftMulti: shop.giftMulti, giftLoop: shop.giftLoop, giftEnabled: shop.giftEnabled,
+    manJianEnabled: shop.manJianEnabled,
+    bonusEnabled: shop.bonusEnabled,
+    totalP, pricePerP, valuePerP, effectivePaidPerP,
+    timeEnabled: shop.timeEnabled, startTime: shop.startTime, endTime: shop.endTime, saleTime: shop.saleTime
+  };
+}
+
+// ===== 渲染结果 =====
+function renderResults() {
+  const results = state.shops.map(s => computeShop(s)).filter(r => r !== null);
+  const resultsBox = document.getElementById('results');
+  if (results.length === 0) { resultsBox.style.display = 'none'; return; }
+  resultsBox.style.display = '';
+
+  results.sort((a, b) => {
+    let va = a[sortBy], vb = b[sortBy];
+    if (sortBy === 'realDiscount') return sortDesc ? va - vb : vb - va;
+    return sortDesc ? vb - va : va - vb;
+  });
+
+  const best = results.reduce((b, r) => r.totalValue > b.totalValue ? r : b, results[0]);
+
+  // 高亮最优卡片
+  document.querySelectorAll('.shop-card').forEach(c => c.classList.remove('best'));
+  const cards = document.getElementById('shopsList').querySelectorAll('.shop-card');
+  state.shops.forEach((s, i) => {
+    const r = computeShop(s);
+    if (r && r.name === best.name && r.totalValue === best.totalValue && cards[i]) cards[i].classList.add('best');
+  });
+
+  // 结论
+  const conclusion = document.getElementById('conclusion');
+  const extraPct = (best.extraSaving * 100).toFixed(1);
+  conclusion.innerHTML = `最划算的是 <span class="highlight">${escapeHtml(best.name)}</span>：实付总价 <strong>¥${best.paid.toFixed(2)}</strong>${best.manJianTotal > 0 ? `，满减<strong>¥${best.manJianTotal.toFixed(2)}</strong>，净支付<strong>¥${best.netPaid.toFixed(2)}</strong>` : ''}，可获原价 <strong>¥${best.productPrice.toFixed(2)}</strong> 的产品，含全部优惠物品总值 <strong>¥${best.totalValue.toFixed(2)}</strong>，实际相当于 <strong>${fmtDiscount(best.realDiscount)}</strong>（标价${fmtDiscount(best.labelDiscount)}），多让利 <span class="highlight">${extraPct}%</span>，性价比 <strong>${best.valuePerYuan.toFixed(2)}</strong>。`;
+
+  // 各店优惠明细
+  const detail = document.getElementById('giftDetail');
+  detail.innerHTML = results.map(r => {
+    let parts = [];
+    if (r.giftRatio > 0) parts.push(`小礼物 ${(r.giftRatio*100).toFixed(0)}% = ¥${r.smallGiftValue.toFixed(2)}`);
+    if (r.giftEnabled && r.manGiftBreakdown.length > 0) {
+      const ml = r.giftMulti ? '多档叠加' : '只取最高档';
+      const lp = r.giftLoop ? '+循环' : '';
+      const gifts = r.manGiftBreakdown.map(g => `满${g.threshold}送「${escapeHtml(g.name)}」(¥${g.amount})`).join('、');
+      parts.push(`满赠[${ml}${lp}]：${gifts} = ¥${r.manGiftTotal.toFixed(2)}`);
+    }
+    if (r.manJianEnabled && r.manJianBreakdown.length > 0) {
+      const mjs = r.manJianBreakdown.map(g => `满${g.threshold}减¥${g.amount}`).join('、');
+      parts.push(`满减：${mjs} = ¥${r.manJianTotal.toFixed(2)}（净付¥${r.netPaid.toFixed(2)}）`);
+    }
+    if (r.bonusEnabled && r.bonusGiftBreakdown.length > 0) {
+      const bgs = r.bonusGiftBreakdown.map(g => `「${escapeHtml(g.name)}」¥${g.value}`).join('、');
+      parts.push(`赠礼：${bgs} = ¥${r.bonusGiftTotal.toFixed(2)}`);
+    }
+    const giftText = parts.length ? parts.join('；') : '无额外优惠';
+    let timeText = '';
+    if (r.timeEnabled) {
+      const ts = buildTimeText(r);
+      if (ts) timeText = ` ｜ ⏰ ${ts}`;
+    }
+    return `<div><span class="shop-name">${escapeHtml(r.name)}</span>：${giftText}${timeText}</div>`;
+  }).join('');
+
+  // 表格
+  const table = document.getElementById('resultTable');
+  const headers = [
+    ['name','店铺'],['paid','实付总价¥'],['manJianTotal','满减¥'],['netPaid','净支付¥'],
+    ['productPrice','可获原价¥'],
+    ['smallGiftValue','小礼物¥'],['manGiftTotal','满赠¥'],
+    ['bonusGiftTotal','赠礼¥'],['totalValue','物品总值¥'],['realDiscount','实际折扣'],
+    ['pricePerP','每P均价¥'],['effectivePaidPerP','综合折后每P¥'],['valuePerYuan','性价比']
+  ];
+  let html = '<thead><tr>';
+  headers.forEach(([key, label]) => {
+    const arrow = sortBy === key ? (sortDesc ? ' ↓' : ' ↑') : '';
+    html += `<th>${label}<button class="sort-btn" onclick="setSort('${key}')">排序${arrow}</button></th>`;
+  });
+  html += '</tr></thead><tbody>';
+  results.forEach(r => {
+    const isBest = r.name === best.name && r.totalValue === best.totalValue;
+    const styleTag = r.style ? ` <span class="style-tag">${escapeHtml(r.style)}</span>` : '';
+    html += `<tr class="${isBest?'best':''}">`;
+    html += `<td>${escapeHtml(r.name)}${styleTag}</td>`;
+    html += `<td>¥${r.paid.toFixed(2)}</td>`;
+    html += `<td>¥${r.manJianTotal.toFixed(2)}</td>`;
+    html += `<td>¥${r.netPaid.toFixed(2)}</td>`;
+    html += `<td>¥${r.productPrice.toFixed(2)}</td>`;
+    html += `<td>¥${r.smallGiftValue.toFixed(2)}</td>`;
+    html += `<td>¥${r.manGiftTotal.toFixed(2)}</td>`;
+    html += `<td>¥${r.bonusGiftTotal.toFixed(2)}</td>`;
+    html += `<td><strong>¥${r.totalValue.toFixed(2)}</strong></td>`;
+    html += `<td>${fmtDiscount(r.realDiscount)}</td>`;
+    html += `<td><strong>¥${r.pricePerP.toFixed(2)}</strong></td>`;
+    html += `<td><strong style="color:var(--primary)">¥${r.effectivePaidPerP.toFixed(2)}</strong></td>`;
+    html += `<td>${r.valuePerYuan.toFixed(2)}</td>`;
+    html += '</tr>';
+  });
+  html += '</tbody>';
+  table.innerHTML = html;
+
+  renderChart('chartValue', results, 'totalValue', 'primary', best, '¥');
+  renderChart('chartDiscount', results, 'realDiscount', 'accent', best, '', true);
+
+  // 每P均价最优结论
+  const perPConc = document.getElementById('perPConclusion');
+  const validPerP = results.filter(r => r.pricePerP > 0);
+  if (validPerP.length > 0) {
+    const pb = validPerP.reduce((b, r) => r.pricePerP < b.pricePerP ? r : b, validPerP[0]);
+    const eb = validPerP.reduce((b, r) => r.effectivePaidPerP < b.effectivePaidPerP ? r : b, validPerP[0]);
+    perPConc.innerHTML = `每P均价最便宜的是 <strong>${escapeHtml(pb.name)}</strong>：¥${pb.pricePerP.toFixed(2)}/P（set实付¥${pb.setPaid.toFixed(2)} ÷ 10P）。` +
+      (eb.effectivePaidPerP > 0 ? `<br>综合折后每P实付最低的是 <strong style="color:var(--primary)">${escapeHtml(eb.name)}</strong>：¥${eb.effectivePaidPerP.toFixed(2)}/P（set原价¥${eb.setPrice.toFixed(0)} × ${fmtDiscount(eb.realDiscount)} ÷ 10P），全优惠均摊后单P实付最低。` : '');
+    renderChart('chartPerP', validPerP, 'pricePerP', 'primary', pb, '¥', false, true);
+    // 综合折后每P图表
+    const validEff = validPerP.filter(r => r.effectivePaidPerP > 0);
+    if (validEff.length > 0) {
+      const ebChart = validEff.reduce((b, r) => r.effectivePaidPerP < b.effectivePaidPerP ? r : b, validEff[0]);
+      renderChart('chartEffPerP', validEff, 'effectivePaidPerP', 'primary', ebChart, '¥', false, true);
+    } else {
+      document.getElementById('chartEffPerP').innerHTML = '';
+    }
+  } else {
+    perPConc.innerHTML = '请填写大食量set原价和折扣以计算每P均价。';
+    document.getElementById('chartPerP').innerHTML = '';
+    document.getElementById('chartEffPerP').innerHTML = '';
+  }
+}
+
+function buildTimeText(r) {
+  const parts = [];
+  if (r.saleTime) parts.push('开售 ' + formatTime(new Date(r.saleTime)));
+  if (r.startTime) parts.push('活动 ' + formatTime(new Date(r.startTime)) + ' 起');
+  if (r.endTime) parts.push(formatTime(new Date(r.endTime)) + ' 止');
+  return parts.join('，');
+}
+
+function renderChart(elId, results, key, colorClass, best, prefix, isDiscount, lowerBetter) {
+  const container = document.getElementById(elId);
+  container.innerHTML = '';
+  const values = results.map(r => r[key]);
+  const max = Math.max(...values, 0.01);
+  const findBest = isDiscount || lowerBetter;
+  const bestVal = findBest ? Math.min(...values) : Math.max(...values);
+  results.forEach(r => {
+    const v = r[key];
+    const pct = (v / max) * 100;
+    const isBest = v === bestVal;
+    let display;
+    if (isDiscount) display = fmtDiscount(v);
+    else display = prefix + v.toFixed(2);
+    const row = document.createElement('div');
+    row.className = 'bar-row';
+    row.innerHTML = `<span class="bar-label">${escapeHtml(r.name)}</span><div class="bar-track"><div class="bar-fill ${isBest?'best':colorClass}" style="width:${Math.max(pct,3)}%">${display}</div></div>`;
+    container.appendChild(row);
+  });
+}
+
+function setSort(key) {
+  if (sortBy === key) { sortDesc = !sortDesc; } else { sortBy = key; sortDesc = true; }
+  renderResults();
+}
+function renderAll() { renderShops(); renderResults(); }
+
+// ===== 示例数据 =====
+function loadExample() {
+  state.shops = [
+    { name:'文创店A', style:'童话风', price:'128', actualPaid:'200', discount:'0.8', giftRatio:'0.1',
+      totalP:'10',
+      giftEnabled:true, giftMulti:true, giftLoop:false,
+      thresholds:[{threshold:'100',name:'书签',value:'8'},{threshold:'150',name:'明信片',value:'18'},{threshold:'200',name:'手账本',value:'35'}],
+      manJianEnabled:true,
+      manJianTiers:[{threshold:'100',amount:'10'},{threshold:'200',amount:'25'}],
+      bonusEnabled:true,
+      bonusGifts:[{type:'宣传礼',detail:'',value:'12'},{type:'首日礼',detail:'',value:'8'}],
+      timeEnabled:false, startTime:'', endTime:'', saleTime:'' }
+  ];
+  renderAll(); save();
+}
+
+function clearAll() {
+  if (!confirm('确定清空当前列表的店铺？（已保存到店铺库的不受影响）')) return;
+  state.shops = [];
+  renderAll(); save();
+}
+
+// ===== 持久化 =====
+function save() { try { localStorage.setItem('wenchuang_calc_v5', JSON.stringify(state)); } catch(e) {} }
+function load() {
+  try {
+    const s = localStorage.getItem('wenchuang_calc_v5') || localStorage.getItem('wenchuang_calc_v4') || localStorage.getItem('wenchuang_calc_v3');
+    if (s) {
+      const old = JSON.parse(s);
+      if (old.shops) {
+        state.shops = old.shops;
+      } else if (old.single && old.single.shops) {
+        state.shops = old.single.shops;
+      } else {
+        state.shops = [];
+      }
+      state.saved = old.saved || [];
+      // 迁移：确保新字段存在
+      const migrate = shop => {
+        shop.totalP = '10';
+        if (shop.actualPaid === undefined) shop.actualPaid = '';
+        if (shop.manJianEnabled === undefined) { shop.manJianEnabled = false; shop.manJianTiers = []; }
+        if (shop.bonusEnabled === undefined) { shop.bonusEnabled = false; shop.bonusGifts = []; }
+        // 满赠叠加方式迁移：旧giftStack → giftMulti/giftLoop
+        if (shop.giftMulti === undefined) {
+          if (shop.giftStack === 'yes') { shop.giftMulti = true; shop.giftLoop = true; }
+          else if (shop.giftStack === 'stack') { shop.giftMulti = true; shop.giftLoop = false; }
+          else { shop.giftMulti = false; shop.giftLoop = false; }
+          delete shop.giftStack;
+        }
+        // 赠礼迁移：旧name → type/detail
+        if (shop.bonusGifts) {
+          shop.bonusGifts.forEach(g => {
+            if (g.type === undefined) { g.type = g.name || ''; g.detail = ''; delete g.name; }
+          });
+        }
+        delete shop.packSpec; delete shop.packCount;
+      };
+      state.shops.forEach(migrate);
+      state.saved.forEach(migrate);
+      renderSavedPanel();
+      renderAll();
+    } else { loadExample(); renderSavedPanel(); }
+  } catch(e) { loadExample(); renderSavedPanel(); }
+}
+
+function escapeHtml(s) { return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+function escapeAttr(s) { return escapeHtml(s); }
+
+setInterval(() => { state.shops.forEach((s, i) => { if (s.timeEnabled) updateTimeStatus(i, s); }); renderResults(); }, 60000);
+
+load();
+</script>
+
+</body>
+</html>
