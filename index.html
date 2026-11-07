@@ -307,10 +307,13 @@
     grid-column: 1 / -1; background: #faf8f3; border: 1px solid var(--border);
     border-radius: 10px; padding: 16px 18px; margin-bottom: 10px;
   }
+  .pb-header {
+    display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px;
+  }
+  .pb-header .block-title { font-size: 14px; font-weight: 600; color: var(--text); }
   .price-block-bar {
     display: flex; align-items: center; gap: 14px; flex-wrap: wrap;
   }
-  .block-title { font-size: 14px; font-weight: 600; color: var(--text); }
   .pb-field { display: flex; align-items: center; gap: 6px; }
   .pb-label { font-size: 13px; color: var(--text-light); white-space: nowrap; }
   .pb-input {
@@ -321,22 +324,16 @@
   .pb-input:focus { outline: none; border-color: var(--primary); }
   .pb-unit { font-size: 13px; color: var(--text-light); }
   .switch-link {
-    font-size: 13px; color: var(--primary); cursor: pointer; margin-left: auto;
+    font-size: 13px; color: var(--primary); cursor: pointer;
     white-space: nowrap; padding: 4px 10px; border-radius: 6px; transition: background 0.2s;
   }
   .switch-link:hover { background: rgba(199,91,57,0.08); }
 
-  /* 多档行 */
-  .tier-rows { margin-top: 12px; display: flex; flex-direction: column; gap: 8px; }
+  /* 多档行 — 复用 pb-field/pb-input 样式 */
+  .tier-rows { display: flex; flex-direction: column; gap: 8px; }
   .dt-row {
-    display: flex; align-items: center; gap: 8px;
+    display: flex; align-items: center; gap: 10px;
   }
-  .dt-row input {
-    border: 1px solid var(--border); border-radius: 8px; padding: 7px 10px;
-    font-size: 14px; text-align: center; background: #fff; transition: border-color 0.2s;
-  }
-  .dt-row input:focus { outline: none; border-color: var(--primary); }
-  .dt-row .t-label { font-size: 13px; color: var(--text-light); white-space: nowrap; }
   .add-dt-btn {
     font-size: 13px; color: var(--primary); background: none; border: 1px dashed var(--primary-light);
     border-radius: 8px; padding: 6px 14px; cursor: pointer; margin-top: 8px; transition: background 0.2s;
@@ -718,17 +715,15 @@ function renderShops() {
     if (tierMode) {
       const tierRows = (shop.discountTiers||[]).map((t, ti) => `
         <div class="dt-row">
-          <input type="text" value="${escapeAttr(t.name||'')}" placeholder="品类名" oninput="updateDiscountTier(${i},${ti},'name',this.value)" style="width:72px">
-          <input type="text" inputmode="decimal" value="${t.discount||''}" placeholder="7" oninput="updateDiscountTier(${i},${ti},'discount',this.value)" style="width:48px">
-          <span class="t-label">折</span>
-          <input type="text" inputmode="decimal" value="${t.amount||''}" placeholder="100" oninput="updateDiscountTier(${i},${ti},'amount',this.value)" style="width:60px">
-          <span class="t-label">元</span>
+          <div class="pb-field"><input type="text" class="pb-input" value="${escapeAttr(t.name||'')}" placeholder="品类名" oninput="updateDiscountTier(${i},${ti},'name',this.value)" style="width:80px"></div>
+          <div class="pb-field"><input type="text" inputmode="decimal" class="pb-input" value="${t.discount||''}" placeholder="7" oninput="updateDiscountTier(${i},${ti},'discount',this.value)" style="width:52px"><span class="pb-unit">折</span></div>
+          <div class="pb-field"><input type="text" inputmode="decimal" class="pb-input" value="${t.amount||''}" placeholder="100" oninput="updateDiscountTier(${i},${ti},'amount',this.value)" style="width:68px"><span class="pb-unit">元</span></div>
           <button class="tier-del" onclick="removeDiscountTier(${i},${ti})">×</button>
         </div>`).join('');
       const sumStr = comp ? `实付总价 <strong>¥${comp.paid.toFixed(2)}</strong> · 本体折扣 <strong>${fmtDiscount(comp.labelDiscount)}</strong>` : '填写档位后自动计算';
       topSection = `
         <div class="price-block">
-          <div class="price-block-bar">
+          <div class="pb-header">
             <span class="block-title">折扣明细</span>
             <span class="switch-link" onclick="updateShop(${i},'discountTierEnabled',false)">← 单一折扣</span>
           </div>
@@ -741,10 +736,13 @@ function renderShops() {
     } else {
       topSection = `
         <div class="price-block">
+          <div class="pb-header">
+            <span class="block-title">价格信息</span>
+            <span class="switch-link" onclick="updateShop(${i},'discountTierEnabled',true)">多档折扣 →</span>
+          </div>
           <div class="price-block-bar">
             <div class="pb-field"><span class="pb-label">实付总价</span><input type="text" inputmode="decimal" class="pb-input" value="${shop.actualPaid}" placeholder="200" oninput="updateShop(${i},'actualPaid',this.value)"><span class="pb-unit">¥</span></div>
             <div class="pb-field"><span class="pb-label">折扣</span><input type="text" inputmode="decimal" class="pb-input" value="${shop.discount}" placeholder="8" oninput="updateShop(${i},'discount',this.value)"><span class="pb-unit">折</span></div>
-            <span class="switch-link" onclick="updateShop(${i},'discountTierEnabled',true)">多档折扣</span>
           </div>
           <div class="block-result"><span id="paid-actual-${i}">${resultStr}</span></div>
           <div class="block-metrics" id="paid-extra-${i}">${metricsStr}</div>
