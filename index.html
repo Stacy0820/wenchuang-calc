@@ -304,6 +304,21 @@
   .icon-btn.share-icon { font-size: 14px; }
   .icon-btn.share-icon:hover { background: var(--accent); }
 
+  /* 店铺备注框 */
+  .shop-note-section {
+    margin-top: 12px; padding-top: 12px; border-top: 1px dashed var(--border);
+  }
+  .note-label {
+    font-size: 12px; color: var(--text-light); display: block; margin-bottom: 4px;
+  }
+  .shop-note {
+    width: 100%; min-height: 60px; resize: vertical;
+    border: 1px solid var(--border); border-radius: 8px;
+    padding: 8px 12px; font-size: 13px; color: var(--text);
+    font-family: inherit; line-height: 1.5; background: #fafaf7;
+  }
+  .shop-note:focus { outline: none; border-color: var(--primary-light); background: #fff; }
+
   @media (max-width: 600px) {
     .header h1 { font-size: 18px; }
     .shop-fields { grid-template-columns: 1fr 1fr; }
@@ -438,7 +453,9 @@ function defaultShop() {
     timeEnabled: false,
     startTime: '',
     endTime: '',
-    saleTime: ''
+    saleTime: '',
+    // 备注
+    note: ''
   };
 }
 
@@ -724,6 +741,10 @@ function renderShops() {
       <div class="time-section">
         <button class="time-toggle-btn" onclick="updateShop(${i},'timeEnabled',!${shop.timeEnabled})">${shop.timeEnabled?'收起活动时间':'⏰ 设置活动时间'}</button>
         ${timeSec}
+      </div>
+      <div class="shop-note-section">
+        <label class="note-label">📝 备注</label>
+        <textarea class="shop-note" placeholder="产品类目、材质、特殊说明等，分享时对方可见" oninput="updateShop(${i},'note',this.value)">${escapeHtml(shop.note||'')}</textarea>
       </div>
     `;
     container.appendChild(card);
