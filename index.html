@@ -337,6 +337,15 @@
     font-size: 12px; color: var(--text-light); cursor: pointer; margin-left: 8px;
     text-decoration: underline; white-space: nowrap;
   }
+  .tier-discount-block {
+    grid-column: 1 / -1; background: var(--gift-bg); border-radius: 8px; padding: 10px 12px;
+  }
+  .tier-discount-header {
+    display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px;
+  }
+  .tier-discount-header .td-label {
+    font-size: 13px; font-weight: 600; color: var(--text);
+  }
 
   @media (max-width: 600px) {
     .header h1 { font-size: 18px; }
@@ -420,7 +429,7 @@
         <li><strong>实际折扣率</strong> = 净支付 ÷ 物品总值（满减后真正拿到的折扣，如7.25折）</li>
         <li><strong>性价比</strong> = 物品总值 ÷ 净支付（每花1元换来的物品原价，越高越划算）</li>
       </ul>
-      <p style="margin-top:10px;">💡 折扣填小数：8折填 <code>0.8</code>。折扣显示格式为"X折"（如7.25折）。大食量set固定10P。满减从实付总价中扣除得到净支付，再用净支付计算实际折扣率。</p>
+      <p style="margin-top:10px;">💡 折扣填"折"数：8折填 <code>8</code>，7.5折填 <code>7.5</code>。大食量set固定10P。满减从实付总价中扣除得到净支付，再用净支付计算实际折扣率。多档折扣模式可处理同店不同折扣率的情况。</p>
     </details>
   </div>
 
@@ -454,12 +463,12 @@ function defaultShop() {
     style: '',
     price: '',            // 大食量set原价（店主定价）
     actualPaid: '',       // 实付总价（满减前）
-    discount: '0.8',      // 折扣，小数（单折扣模式）
+    discount: '8',       // 折扣（折格式：8=八折，7.5=七五折）
     giftRatio: '0.1',     // 小礼物比例
     totalP: '10',         // 固定10P
     // 多档折扣明细（启用后按各档折扣+金额精确计算可获原价）
     discountTierEnabled: false,
-    discountTiers: [],    // [{discount:'0.7', amount:'100'}, ...]
+    discountTiers: [],    // [{name:'新品', discount:'7', amount:'100'}, ...]
     // 满赠
     giftEnabled: false,
     giftMulti: false,
@@ -503,7 +512,7 @@ function removeThreshold(shopIdx, tIdx) {
 // ===== 多档折扣档位 =====
 function addDiscountTier(idx) {
   if (!state.shops[idx].discountTiers) state.shops[idx].discountTiers = [];
-  state.shops[idx].discountTiers.push({ discount: '', amount: '' });
+  state.shops[idx].discountTiers.push({ name: '', discount: '', amount: '' });
   renderShops(); renderResults(); save();
 }
 function removeDiscountTier(shopIdx, tIdx) {
@@ -582,8 +591,10 @@ function updatePaidDisplay(i) {
   if (!shop) return;
   const comp = computeShop(shop);
   const tierMode = shop.discountTierEnabled && shop.discountTiers && shop.discountTiers.length > 0;
-  const dv = tierMode ? (comp ? comp.labelDiscount : 0) : (parseFloat(shop.discount) || 0);
-  const labelStr = dv > 0 ? fmtDiscount(dv) : '';
+  // 标价折扣：折格式直接显示
+  const labelStr = tierMode
+    ? (comp ? fmtDiscount(comp.labelDiscount) : '')
+    : (parseFloat(shop.discount) > 0 ? parseFloat(shop.discount) + '折' : '');
 
   const tagEl = document.getElementById(`paid-actual-${i}`);
   if (tagEl) {
@@ -647,7 +658,7 @@ function renderSavedPanel() {
     return;
   }
   body.innerHTML = state.saved.map((s, i) => {
-    const info = (s.style ? `[${escapeHtml(s.style)}] ` : '') + `set原价¥${s.price||'-'} / ${fmtDiscount(parseFloat(s.discount)||0)} / 小礼物${s.giftRatio||'0'}` +
+    const info = (s.style ? `[${escapeHtml(s.style)}] ` : '') + `set原价¥${s.price||'-'} / ${parseFloat(s.discount)||0}折 / 小礼物${s.giftRatio||'0'}` +
       (s.giftEnabled && s.thresholds.length ? ` / 满${s.thresholds.length}档赠` : '') +
       (s.manJianEnabled && s.manJianTiers.length ? ` / 满${s.manJianTiers.length}档减` : '') +
       (s.bonusEnabled && s.bonusGifts.length ? ` / ${s.bonusGifts.length}个赠礼` : '');
@@ -670,11 +681,12 @@ function renderShops() {
     const card = document.createElement('div');
     card.className = 'shop-card';
 
-    // 实付总价输入区
+    // 实付总价/折扣输入区
     const comp = computeShop(shop);
     const tierMode = shop.discountTierEnabled && shop.discountTiers && shop.discountTiers.length > 0;
-    const dv = tierMode ? (comp ? comp.labelDiscount : 0) : (parseFloat(shop.discount) || 0);
-    const labelStr = dv > 0 ? fmtDiscount(dv) : '';
+    const labelStr = tierMode
+      ? (comp ? fmtDiscount(comp.labelDiscount) : '')
+      : (parseFloat(shop.discount) > 0 ? parseFloat(shop.discount) + '折' : '');
     const actualTagStr = comp
       ? `标价${labelStr} → 实际<strong style="color:var(--accent)">${fmtDiscount(comp.realDiscount)}</strong>`
       : (labelStr ? `标价${labelStr}` : '');
@@ -682,8 +694,36 @@ function renderShops() {
     const extraStr = comp
       ? `${mjStr}每P均价 <strong>¥${comp.pricePerP.toFixed(2)}</strong> · 综合折后每P实付 <span class="metric-new">¥${comp.effectivePaidPerP.toFixed(2)}</span> · 物品总值<strong>¥${comp.totalValue.toFixed(2)}</strong>`
       : (tierMode ? '填写折扣档位后显示' : '填写实付总价和折扣后显示');
-    const paidDisplayVal = tierMode && comp ? comp.paid.toFixed(2) : shop.actualPaid;
-    const paidSection = `<div class="paid-display"><span class="paid-label">实付总价</span><input type="number" min="0" class="paid-input" value="${paidDisplayVal}" placeholder="如200" oninput="updateShop(${i},'actualPaid',this.value)" ${tierMode?'readonly style="opacity:0.6"':''}><span class="paid-tag" id="paid-actual-${i}" style="${actualTagStr?'':'display:none'}">${actualTagStr}</span><span class="paid-extra" id="paid-extra-${i}">${extraStr}</span></div>`;
+
+    // 单折扣模式：实付总价 + 折扣输入
+    // 多档模式：多档输入区 + 自动汇总（替换实付总价和折扣）
+    let topSection;
+    if (tierMode) {
+      const tierRows = (shop.discountTiers||[]).map((t, ti) => `
+        <div class="dt-row">
+          <input type="text" value="${escapeAttr(t.name||'')}" placeholder="品类名" oninput="updateDiscountTier(${i},${ti},'name',this.value)" style="width:70px">
+          <input type="text" inputmode="decimal" value="${t.discount||''}" placeholder="7" oninput="updateDiscountTier(${i},${ti},'discount',this.value)" style="width:50px">
+          <span class="t-label">折</span>
+          <input type="text" inputmode="decimal" value="${t.amount||''}" placeholder="100" oninput="updateDiscountTier(${i},${ti},'amount',this.value)" style="width:60px">
+          <span class="t-label">元</span>
+          <button class="tier-del" onclick="removeDiscountTier(${i},${ti})">×</button>
+        </div>`).join('');
+      const sumStr = comp ? `实付总价 <strong>¥${comp.paid.toFixed(2)}</strong> · 综合折扣 <strong>${fmtDiscount(comp.labelDiscount)}</strong>` : '填写档位后自动计算';
+      topSection = `
+        <div class="tier-discount-block">
+          <div class="tier-discount-header">
+            <span class="td-label">折扣明细</span>
+            <span class="discount-toggle-inline" onclick="updateShop(${i},'discountTierEnabled',false)">← 返回单一折扣</span>
+          </div>
+          ${tierRows}
+          <button class="add-dt-btn" onclick="addDiscountTier(${i})">+ 添加档位</button>
+          <div class="discount-tier-summary">${sumStr}</div>
+          <span class="paid-tag" id="paid-actual-${i}" style="${actualTagStr?'':'display:none'}">${actualTagStr}</span>
+          <span class="paid-extra" id="paid-extra-${i}">${extraStr}</span>
+        </div>`;
+    } else {
+      topSection = `<div class="paid-display"><span class="paid-label">实付总价</span><input type="text" inputmode="decimal" class="paid-input" value="${shop.actualPaid}" placeholder="如200" oninput="updateShop(${i},'actualPaid',this.value)"><span class="paid-tag" id="paid-actual-${i}" style="${actualTagStr?'':'display:none'}">${actualTagStr}</span><span class="paid-extra" id="paid-extra-${i}">${extraStr}</span></div>`;
+    }
 
     // 满赠区域
     const giftSec = shop.giftEnabled ? `
@@ -695,11 +735,11 @@ function renderShops() {
         ${shop.thresholds.map((t, ti) => `
           <div class="tier-row gift-row">
             <span class="t-label">满</span>
-            <input type="number" min="0" value="${t.threshold}" placeholder="38" oninput="updateThreshold(${i},${ti},'threshold',this.value)">
+            <input type="text" inputmode="decimal" value="${t.threshold}" placeholder="38" oninput="updateThreshold(${i},${ti},'threshold',this.value)">
             <span class="t-label">送</span>
             <input type="text" class="wide" value="${escapeAttr(t.name)}" placeholder="赠品名" oninput="updateThreshold(${i},${ti},'name',this.value)">
             <span class="t-label">原价¥</span>
-            <input type="number" min="0" value="${t.value}" placeholder="15" oninput="updateThreshold(${i},${ti},'value',this.value)">
+            <input type="text" inputmode="decimal" value="${t.value}" placeholder="15" oninput="updateThreshold(${i},${ti},'value',this.value)">
             <button class="tier-del" onclick="removeThreshold(${i},${ti})">×</button>
           </div>`).join('')}
       </div>
@@ -712,9 +752,9 @@ function renderShops() {
         ${shop.manJianTiers.map((t, ti) => `
           <div class="tier-row mj-row">
             <span class="t-label">满</span>
-            <input type="number" min="0" value="${t.threshold}" placeholder="50" oninput="updateManJian(${i},${ti},'threshold',this.value)">
+            <input type="text" inputmode="decimal" value="${t.threshold}" placeholder="50" oninput="updateManJian(${i},${ti},'threshold',this.value)">
             <span class="t-label">减¥</span>
-            <input type="number" min="0" value="${t.amount}" placeholder="5" oninput="updateManJian(${i},${ti},'amount',this.value)">
+            <input type="text" inputmode="decimal" value="${t.amount}" placeholder="5" oninput="updateManJian(${i},${ti},'amount',this.value)">
             <button class="tier-del" onclick="removeManJian(${i},${ti})">×</button>
           </div>`).join('')}
       </div>
@@ -729,36 +769,15 @@ function renderShops() {
             <input type="text" value="${escapeAttr(g.type||'')}" placeholder="如 宣传礼" style="width:80px" oninput="updateBonus(${i},${gi},'type',this.value)">
             <input type="text" class="wide" value="${escapeAttr(g.detail||'')}" placeholder="具体名称 如 10p豆丁贴" oninput="updateBonus(${i},${gi},'detail',this.value)">
             <span class="t-label">原价¥</span>
-            <input type="number" min="0" value="${g.value}" placeholder="15" oninput="updateBonus(${i},${gi},'value',this.value)">
+            <input type="text" inputmode="decimal" value="${g.value}" placeholder="15" oninput="updateBonus(${i},${gi},'value',this.value)">
             <button class="tier-del" onclick="removeBonus(${i},${gi})">×</button>
           </div>`).join('')}
       </div>
       <button class="add-tier-btn" onclick="addBonus(${i})">+ 添加赠礼</button>
     ` : '';
 
-    // 多档折扣区域
-    const dtSummary = (() => {
-      if (!shop.discountTierEnabled) return '';
-      const valid = (shop.discountTiers||[]).filter(t => parseFloat(t.discount) > 0 && parseFloat(t.amount) > 0);
-      if (valid.length === 0) return '';
-      const sum = valid.reduce((s, t) => s + parseFloat(t.amount), 0);
-      const orig = valid.reduce((s, t) => s + parseFloat(t.amount) / parseFloat(t.discount), 0);
-      return `<div class="discount-tier-summary">合计实付 <strong>¥${sum.toFixed(2)}</strong> · 可获原价 <strong>¥${orig.toFixed(2)}</strong> · 加权${fmtDiscount(sum/orig)}</div>`;
-    })();
-    const dtSec = shop.discountTierEnabled ? `
-      <div class="tier-list">
-        ${(shop.discountTiers||[]).map((t, ti) => `
-          <div class="dt-row">
-            <input type="number" min="0" step="0.05" value="${t.discount||''}" placeholder="0.7" oninput="updateDiscountTier(${i},${ti},'discount',this.value)" style="width:60px">
-            <span class="t-label">折</span>
-            <input type="number" min="0" value="${t.amount||''}" placeholder="100" oninput="updateDiscountTier(${i},${ti},'amount',this.value)" style="width:70px">
-            <span class="t-label">元</span>
-            <button class="tier-del" onclick="removeDiscountTier(${i},${ti})">×</button>
-          </div>`).join('')}
-      </div>
-      <button class="add-dt-btn" onclick="addDiscountTier(${i})">+ 添加折扣档</button>
-      ${dtSummary}
-    ` : '';
+    // 多档折扣区域（已合并到 topSection，这里留空）
+    const dtSec = '';
 
     const timeSec = shop.timeEnabled ? `
       <div class="time-fields">
@@ -795,15 +814,14 @@ function renderShops() {
         </div>
       </div>
       <div class="shop-fields">
-        ${paidSection}
-        <div class="field"><label>大食量set原价 ¥</label><input type="number" min="0" value="${shop.price}" placeholder="如128" oninput="updateShop(${i},'price',this.value)"><span class="sub-hint">店主定价</span></div>
+        ${topSection}
+        <div class="field"><label>大食量set原价 ¥</label><input type="text" inputmode="decimal" value="${shop.price}" placeholder="如128" oninput="updateShop(${i},'price',this.value)"><span class="sub-hint">店主定价</span></div>
         ${shop.discountTierEnabled
-          ? `<div class="field"><label>折扣</label><span class="discount-toggle-inline" onclick="updateShop(${i},'discountTierEnabled',false)">← 返回单折扣</span></div>`
-          : `<div class="field"><label>折扣</label><input type="number" min="0" step="0.05" value="${shop.discount}" placeholder="如0.8" oninput="updateShop(${i},'discount',this.value)"><span class="discount-toggle-inline" onclick="updateShop(${i},'discountTierEnabled',true)">多档折扣</span></div>`
+          ? ''
+          : `<div class="field"><label>折扣</label><input type="text" inputmode="decimal" value="${shop.discount}" placeholder="如8" oninput="updateShop(${i},'discount',this.value)"><span class="sub-hint">8=八折</span><span class="discount-toggle-inline" onclick="updateShop(${i},'discountTierEnabled',true)">多档折扣</span></div>`
         }
-        <div class="field"><label>小礼物比例</label><input type="number" min="0" step="0.05" value="${shop.giftRatio}" placeholder="如0.1" oninput="updateShop(${i},'giftRatio',this.value)"><span class="sub-hint">0.1 = 实付10%</span></div>
+        <div class="field"><label>小礼物比例</label><input type="text" inputmode="decimal" value="${shop.giftRatio}" placeholder="如0.1" oninput="updateShop(${i},'giftRatio',this.value)"><span class="sub-hint">0.1=实付10%</span></div>
       </div>
-      ${shop.discountTierEnabled ? `<div class="promo-section">${dtSec}</div>` : ''}
       <div class="promo-toggles-row">
         <div class="field"><label>赠礼</label><select onchange="updateShop(${i},'bonusEnabled',this.value==='on')"><option value="off" ${!shop.bonusEnabled?'selected':''}>关闭</option><option value="on" ${shop.bonusEnabled?'selected':''}>开启</option></select></div>
         <div class="field"><label>满赠</label><select onchange="updateShop(${i},'giftEnabled',this.value==='on')"><option value="off" ${!shop.giftEnabled?'selected':''}>关闭</option><option value="on" ${shop.giftEnabled?'selected':''}>开启</option></select></div>
@@ -938,16 +956,16 @@ function computeShop(shop) {
 
   if (tierMode) {
     const validTiers = shop.discountTiers
-      .map(t => ({ discount: parseFloat(t.discount)||0, amount: parseFloat(t.amount)||0 }))
+      .map(t => ({ discount: (parseFloat(t.discount)||0) / 10, amount: parseFloat(t.amount)||0, name: t.name||'' }))
       .filter(t => t.discount > 0 && t.amount > 0);
     if (validTiers.length === 0) return null;
     paid = validTiers.reduce((s, t) => s + t.amount, 0);
     productPrice = validTiers.reduce((s, t) => s + t.amount / t.discount, 0);
-    d = productPrice > 0 ? paid / productPrice : 0; // 加权平均折扣
+    d = productPrice > 0 ? paid / productPrice : 0; // 加权平均折扣（小数）
   } else {
     const ap = parseFloat(shop.actualPaid);
     if (!ap || ap <= 0) return null;
-    d = parseFloat(shop.discount) || 0;
+    d = (parseFloat(shop.discount) || 0) / 10; // 折格式转小数：8→0.8
     paid = ap;
     productPrice = d > 0 ? paid / d : paid;
   }
@@ -1182,7 +1200,7 @@ function renderAll() { renderShops(); renderResults(); }
 // ===== 示例数据 =====
 function loadExample() {
   state.shops = [
-    { name:'文创店A', style:'童话风', price:'128', actualPaid:'200', discount:'0.8', giftRatio:'0.1',
+    { name:'文创店A', style:'童话风', price:'128', actualPaid:'200', discount:'8', giftRatio:'0.1',
       totalP:'10',
       discountTierEnabled:false, discountTiers:[],
       giftEnabled:true, giftMulti:true, giftLoop:false,
@@ -1334,6 +1352,19 @@ function load() {
         if (shop.bonusEnabled === undefined) { shop.bonusEnabled = false; shop.bonusGifts = []; }
         if (shop.discountTierEnabled === undefined) { shop.discountTierEnabled = false; shop.discountTiers = []; }
         if (shop.note === undefined) shop.note = '';
+        // 旧折扣小数格式迁移：0.8 → '8'
+        if (shop.discount && parseFloat(shop.discount) < 1 && parseFloat(shop.discount) > 0) {
+          shop.discount = String((parseFloat(shop.discount) * 10).toFixed(1).replace(/\.0$/, ''));
+        }
+        // 多档折扣旧格式迁移
+        if (shop.discountTiers) {
+          shop.discountTiers.forEach(t => {
+            if (t.name === undefined) t.name = '';
+            if (t.discount && parseFloat(t.discount) < 1 && parseFloat(t.discount) > 0) {
+              t.discount = String((parseFloat(t.discount) * 10).toFixed(1).replace(/\.0$/, ''));
+            }
+          });
+        }
         // 满赠叠加方式迁移：旧giftStack → giftMulti/giftLoop
         if (shop.giftMulti === undefined) {
           if (shop.giftStack === 'yes') { shop.giftMulti = true; shop.giftLoop = true; }
