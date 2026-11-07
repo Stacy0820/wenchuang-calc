@@ -573,6 +573,12 @@ function removeBonus(shopIdx, tIdx) {
 
 function updateShop(idx, field, value) {
   state.shops[idx][field] = value;
+  // 切换到多档折扣时，自动填充默认档位
+  if (field === 'discountTierEnabled' && value === true) {
+    if (!state.shops[idx].discountTiers || state.shops[idx].discountTiers.length === 0) {
+      state.shops[idx].discountTiers = [{ name: '新品', discount: '', amount: '' }, { name: '旧品', discount: '', amount: '' }];
+    }
+  }
   if (['giftEnabled','manJianEnabled','bonusEnabled','timeEnabled','discountTierEnabled'].includes(field)) {
     renderShops();
   } else {
@@ -1371,7 +1377,12 @@ function load() {
         if (shop.actualPaid === undefined) shop.actualPaid = '';
         if (shop.manJianEnabled === undefined) { shop.manJianEnabled = false; shop.manJianTiers = []; }
         if (shop.bonusEnabled === undefined) { shop.bonusEnabled = false; shop.bonusGifts = []; }
-        if (shop.discountTierEnabled === undefined) { shop.discountTierEnabled = false; shop.discountTiers = []; }
+        if (shop.discountTierEnabled === undefined || shop.discountTierEnabled === false) {
+          shop.discountTierEnabled = true;
+          if (!shop.discountTiers || shop.discountTiers.length === 0) {
+            shop.discountTiers = [{ name: '新品', discount: '', amount: '' }, { name: '旧品', discount: '', amount: '' }];
+          }
+        }
         if (shop.note === undefined) shop.note = '';
         // 旧折扣小数格式迁移：0.8 → '8'
         if (shop.discount && parseFloat(shop.discount) < 1 && parseFloat(shop.discount) > 0) {
