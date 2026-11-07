@@ -410,7 +410,7 @@
       <div class="chart" id="chartValue"></div>
     </div>
     <div class="chart-section">
-      <h3>实际折扣率对比（越低越划算）</h3>
+      <h3>实获综合折扣对比（越低越划算）</h3>
       <div class="chart" id="chartDiscount"></div>
     </div>
     <div class="chart-section">
@@ -429,20 +429,21 @@
       <ul>
         <li><strong>实付总价</strong> = 手动输入打折后的总消费金额（满减前，可能买了多个稿图+散件）</li>
         <li><strong>大食量set原价</strong> = 店主设定的单套原价（定价参考，set内含卡头卡背折页等10P散件）</li>
-        <li><strong>折扣</strong> = 店铺折扣率，如0.8=八折</li>
-        <li><strong>可获原价</strong> = 实付总价 ÷ 折扣（单折扣模式）；多档折扣模式 = Σ(每档金额 ÷ 该档折扣)</li>
+        <li><strong>折扣</strong> = 店铺标价折扣，填"折"数：8=八折，7.5=七五折，7.25=七二五折</li>
+        <li><strong>可获原价</strong> = 实付总价 ÷ (折扣÷10)（单折扣模式）；多档折扣模式 = Σ(每档金额 ÷ (该档折扣÷10))</li>
+        <li><strong>本体折扣</strong> = 仅折扣本身产生的折扣率（不含满减/满赠/赠礼等额外优惠）。单折扣模式即输入的折扣；多档折扣模式 = 实付总价 ÷ 可获原价（加权平均）</li>
         <li><strong>满减</strong>：基于实付总价判断，达到门槛直接减免，只取最高档使用一次（无叠加）。满减后净支付 = 实付总价 − 满减金额</li>
-        <li><strong>大食量set实付</strong> = set原价 × 折扣（单套实付价格）</li>
+        <li><strong>大食量set实付</strong> = set原价 × (折扣÷10)（单套实付价格）</li>
         <li><strong>每P均价</strong> = 大食量set实付 ÷ 10P（基于set定价的每P价格，大食量set固定10P）</li>
-        <li><strong>综合折后每P实付</strong> = 大食量set原价 × 实际折扣率 ÷ 10P（将满减/满赠/赠礼/小礼物等全部优惠折算为实际折扣率后，等价分摊到每P的实付价格。比每P均价更能体现一系列折扣均摊后单P价格的下降）</li>
+        <li><strong>综合折后每P实付</strong> = 大食量set原价 × 实获综合折扣 ÷ 10P（将满减/满赠/赠礼/小礼物等全部优惠折算为实获综合折扣后，等价分摊到每P的实付价格。比每P均价更能体现一系列折扣均摊后单P价格的下降）</li>
         <li><strong>小礼物价值</strong> = 实付总价 × 小礼物比例（按实付总价的百分比赠送）</li>
         <li><strong>满赠</strong>：基于实付总价金额判断，达到门槛赠送品。两个独立开关——「可叠加」(各达标档都送) + 「可循环」(按倍数重复送)，可任意组合</li>
         <li><strong>赠礼</strong>：宣传礼、小时礼、首日礼等条件赠品，填入类型+具体名称+原价（如"宣传礼 / 10p豆丁贴 / ¥12"），价值计入物品总值</li>
         <li><strong>物品总值</strong> = 可获原价 + 小礼物价值 + 满赠赠品原价 + 赠礼原价（满减不计入总值，而是降低净支付）</li>
-        <li><strong>实际折扣率</strong> = 净支付 ÷ 物品总值（满减后真正拿到的折扣，如7.25折）</li>
+        <li><strong>实获综合折扣</strong> = 净支付 ÷ 物品总值（将本体折扣+满减+满赠+赠礼+小礼物全部折算后的真实折扣率，如7.25折。比本体折扣更能体现实际优惠力度）</li>
         <li><strong>性价比</strong> = 物品总值 ÷ 净支付（每花1元换来的物品原价，越高越划算）</li>
       </ul>
-      <p style="margin-top:10px;">💡 折扣填"折"数：8折填 <code>8</code>，7.5折填 <code>7.5</code>。大食量set固定10P。满减从实付总价中扣除得到净支付，再用净支付计算实际折扣率。多档折扣模式可处理同店不同折扣率的情况。</p>
+      <p style="margin-top:10px;">💡 折扣统一填"折"数：8折填 <code>8</code>，7.5折填 <code>7.5</code>，7.25折填 <code>7.25</code>。大食量set固定10P。<strong>本体折扣</strong>仅反映折扣本身的优惠力度；<strong>实获综合折扣</strong>在此基础上叠加满减/满赠/赠礼/小礼物后的真实折扣率。满减从实付总价中扣除得到净支付，再用净支付计算实获综合折扣。多档折扣模式可处理同店不同折扣率的情况。</p>
     </details>
   </div>
 
@@ -480,8 +481,8 @@ function defaultShop() {
     giftRatio: '0.1',     // 小礼物比例
     totalP: '10',         // 固定10P
     // 多档折扣明细（启用后按各档折扣+金额精确计算可获原价）
-    discountTierEnabled: false,
-    discountTiers: [],    // [{name:'新品', discount:'7', amount:'100'}, ...]
+    discountTierEnabled: true,
+    discountTiers: [{ name: '', discount: '', amount: '' }],    // 默认多档折扣，[{name:'新品', discount:'7', amount:'100'}, ...]
     // 满赠
     giftEnabled: false,
     giftMulti: false,
@@ -617,7 +618,7 @@ function updatePaidDisplay(i) {
   const tagEl = document.getElementById(`paid-actual-${i}`);
   if (tagEl) {
     if (comp) {
-      tagEl.innerHTML = `标价${labelStr} → 实际<strong style="color:var(--accent);font-size:15px">${fmtDiscount(comp.realDiscount)}</strong>`;
+      tagEl.innerHTML = `标价${labelStr} → 实获综合折扣<strong style="color:var(--accent);font-size:15px">${fmtDiscount(comp.realDiscount)}</strong>`;
     } else if (labelStr) {
       tagEl.textContent = `标价${labelStr}`;
     } else {
@@ -705,7 +706,7 @@ function renderShops() {
       : (parseFloat(shop.discount) > 0 ? parseFloat(shop.discount) + '折' : '');
     const mjStr = comp && comp.manJianTotal > 0 ? `满减¥${comp.manJianTotal.toFixed(2)} → 净付<span class="net-paid-badge">¥${comp.netPaid.toFixed(2)}</span> · ` : '';
     const resultStr = comp
-      ? `标价${labelStr} → 实际<strong style="color:var(--accent);font-size:15px">${fmtDiscount(comp.realDiscount)}</strong>`
+      ? `标价${labelStr} → 实获综合折扣<strong style="color:var(--accent);font-size:15px">${fmtDiscount(comp.realDiscount)}</strong>`
       : (labelStr ? `标价${labelStr}` : '填写价格后自动计算');
     const metricsStr = comp
       ? `${mjStr}每P <strong>¥${comp.pricePerP.toFixed(2)}</strong> · 综合折后每P <span class="metric-new">¥${comp.effectivePaidPerP.toFixed(2)}</span> · 物品总值<strong>¥${comp.totalValue.toFixed(2)}</strong>`
@@ -840,10 +841,6 @@ function renderShops() {
       <div class="shop-fields">
         ${topSection}
         <div class="field"><label>大食量set原价 ¥</label><input type="text" inputmode="decimal" value="${shop.price}" placeholder="如128" oninput="updateShop(${i},'price',this.value)"><span class="sub-hint">店主定价</span></div>
-        ${shop.discountTierEnabled
-          ? ''
-          : `<div class="field"><label>折扣</label><input type="text" inputmode="decimal" value="${shop.discount}" placeholder="如8" oninput="updateShop(${i},'discount',this.value)"><span class="sub-hint">8=八折</span><span class="discount-toggle-inline" onclick="updateShop(${i},'discountTierEnabled',true)">多档折扣</span></div>`
-        }
         <div class="field"><label>小礼物比例</label><input type="text" inputmode="decimal" value="${shop.giftRatio}" placeholder="如0.1" oninput="updateShop(${i},'giftRatio',this.value)"><span class="sub-hint">0.1=实付10%</span></div>
       </div>
       <div class="promo-toggles-row">
@@ -1092,7 +1089,7 @@ function renderResults() {
   // 结论
   const conclusion = document.getElementById('conclusion');
   const extraPct = (best.extraSaving * 100).toFixed(1);
-  conclusion.innerHTML = `最划算的是 <span class="highlight">${escapeHtml(best.name)}</span>：实付总价 <strong>¥${best.paid.toFixed(2)}</strong>${best.manJianTotal > 0 ? `，满减<strong>¥${best.manJianTotal.toFixed(2)}</strong>，净支付<strong>¥${best.netPaid.toFixed(2)}</strong>` : ''}，可获原价 <strong>¥${best.productPrice.toFixed(2)}</strong> 的产品，含全部优惠物品总值 <strong>¥${best.totalValue.toFixed(2)}</strong>，实际相当于 <strong>${fmtDiscount(best.realDiscount)}</strong>（标价${fmtDiscount(best.labelDiscount)}），多让利 <span class="highlight">${extraPct}%</span>，性价比 <strong>${best.valuePerYuan.toFixed(2)}</strong>。`;
+  conclusion.innerHTML = `最划算的是 <span class="highlight">${escapeHtml(best.name)}</span>：实付总价 <strong>¥${best.paid.toFixed(2)}</strong>${best.manJianTotal > 0 ? `，满减<strong>¥${best.manJianTotal.toFixed(2)}</strong>，净支付<strong>¥${best.netPaid.toFixed(2)}</strong>` : ''}，可获原价 <strong>¥${best.productPrice.toFixed(2)}</strong> 的产品，含全部优惠物品总值 <strong>¥${best.totalValue.toFixed(2)}</strong>，实获综合折扣 <strong>${fmtDiscount(best.realDiscount)}</strong>（标价${fmtDiscount(best.labelDiscount)}），多让利 <span class="highlight">${extraPct}%</span>，性价比 <strong>${best.valuePerYuan.toFixed(2)}</strong>。`;
 
   // 各店优惠明细
   const detail = document.getElementById('giftDetail');
@@ -1226,7 +1223,7 @@ function loadExample() {
   state.shops = [
     { name:'文创店A', style:'童话风', price:'128', actualPaid:'200', discount:'8', giftRatio:'0.1',
       totalP:'10',
-      discountTierEnabled:false, discountTiers:[],
+      discountTierEnabled:true, discountTiers:[{name:'新品', discount:'7', amount:'120'},{name:'旧品', discount:'8.5', amount:'80'}],
       giftEnabled:true, giftMulti:true, giftLoop:false,
       thresholds:[{threshold:'100',name:'书签',value:'8'},{threshold:'150',name:'明信片',value:'18'},{threshold:'200',name:'手账本',value:'35'}],
       manJianEnabled:true,
