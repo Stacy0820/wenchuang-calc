@@ -482,7 +482,7 @@ function defaultShop() {
     totalP: '10',         // 固定10P
     // 多档折扣明细（启用后按各档折扣+金额精确计算可获原价）
     discountTierEnabled: true,
-    discountTiers: [{ name: '', discount: '', amount: '' }],    // 默认多档折扣，[{name:'新品', discount:'7', amount:'100'}, ...]
+    discountTiers: [{ name: '新品', discount: '', amount: '' }, { name: '旧品', discount: '', amount: '' }],    // 默认预填新品/旧品，用户可自行修改
     // 满赠
     giftEnabled: false,
     giftMulti: false,
@@ -618,7 +618,7 @@ function updatePaidDisplay(i) {
   const tagEl = document.getElementById(`paid-actual-${i}`);
   if (tagEl) {
     if (comp) {
-      tagEl.innerHTML = `标价${labelStr} → 实获综合折扣<strong style="color:var(--accent);font-size:15px">${fmtDiscount(comp.realDiscount)}</strong>`;
+      tagEl.innerHTML = `标价${labelStr} → 实获综合折扣<strong style="color:var(--primary);font-size:15px">${fmtDiscount(comp.realDiscount)}</strong>`;
     } else if (labelStr) {
       tagEl.textContent = `标价${labelStr}`;
     } else {
@@ -706,7 +706,7 @@ function renderShops() {
       : (parseFloat(shop.discount) > 0 ? parseFloat(shop.discount) + '折' : '');
     const mjStr = comp && comp.manJianTotal > 0 ? `满减¥${comp.manJianTotal.toFixed(2)} → 净付<span class="net-paid-badge">¥${comp.netPaid.toFixed(2)}</span> · ` : '';
     const resultStr = comp
-      ? `标价${labelStr} → 实获综合折扣<strong style="color:var(--accent);font-size:15px">${fmtDiscount(comp.realDiscount)}</strong>`
+      ? `标价${labelStr} → 实获综合折扣<strong style="color:var(--primary);font-size:15px">${fmtDiscount(comp.realDiscount)}</strong>`
       : (labelStr ? `标价${labelStr}` : '填写价格后自动计算');
     const metricsStr = comp
       ? `${mjStr}每P <strong>¥${comp.pricePerP.toFixed(2)}</strong> · 综合折后每P <span class="metric-new">¥${comp.effectivePaidPerP.toFixed(2)}</span> · 物品总值<strong>¥${comp.totalValue.toFixed(2)}</strong>`
@@ -718,7 +718,7 @@ function renderShops() {
         <div class="dt-row">
           <div class="pb-field"><input type="text" class="pb-input" value="${escapeAttr(t.name||'')}" placeholder="品类名" oninput="updateDiscountTier(${i},${ti},'name',this.value)" style="width:80px"></div>
           <div class="pb-field"><input type="text" inputmode="decimal" class="pb-input" value="${t.discount||''}" placeholder="7" oninput="updateDiscountTier(${i},${ti},'discount',this.value)" style="width:52px"><span class="pb-unit">折</span></div>
-          <div class="pb-field"><input type="text" inputmode="decimal" class="pb-input" value="${t.amount||''}" placeholder="100" oninput="updateDiscountTier(${i},${ti},'amount',this.value)" style="width:68px"><span class="pb-unit">元</span></div>
+          <div class="pb-field"><span class="pb-label" style="font-size:11px">折后实付</span><input type="text" inputmode="decimal" class="pb-input" value="${t.amount||''}" placeholder="100" oninput="updateDiscountTier(${i},${ti},'amount',this.value)" style="width:52px"><span class="pb-unit">元</span></div>
           <button class="tier-del" onclick="removeDiscountTier(${i},${ti})">×</button>
         </div>`).join('');
       const sumStr = comp ? `实付总价 <strong>¥${comp.paid.toFixed(2)}</strong> · 本体折扣 <strong>${fmtDiscount(comp.labelDiscount)}</strong>` : '填写档位后自动计算';
@@ -742,8 +742,8 @@ function renderShops() {
             <span class="switch-link" onclick="updateShop(${i},'discountTierEnabled',true)">多档折扣 →</span>
           </div>
           <div class="price-block-bar">
-            <div class="pb-field"><span class="pb-label">实付总价</span><input type="text" inputmode="decimal" class="pb-input" value="${shop.actualPaid}" placeholder="200" oninput="updateShop(${i},'actualPaid',this.value)"><span class="pb-unit">¥</span></div>
             <div class="pb-field"><span class="pb-label">折扣</span><input type="text" inputmode="decimal" class="pb-input" value="${shop.discount}" placeholder="8" oninput="updateShop(${i},'discount',this.value)"><span class="pb-unit">折</span></div>
+            <div class="pb-field"><span class="pb-label">折后实付</span><input type="text" inputmode="decimal" class="pb-input" value="${shop.actualPaid}" placeholder="200" oninput="updateShop(${i},'actualPaid',this.value)"><span class="pb-unit">¥</span></div>
           </div>
           <div class="block-result"><span id="paid-actual-${i}">${resultStr}</span></div>
           <div class="block-metrics" id="paid-extra-${i}">${metricsStr}</div>
