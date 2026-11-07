@@ -86,30 +86,6 @@
   .field input:focus { outline: none; border-color: var(--primary); }
   .field .sub-hint { font-size: 11px; color: #aaa; }
 
-  .paid-display {
-    grid-column: 1 / -1;
-    background: linear-gradient(135deg, var(--gift-bg), #fff8f5);
-    border: 1px solid var(--primary-light);
-    border-radius: 10px;
-    padding: 12px 16px;
-    display: flex; align-items: center; gap: 12px; flex-wrap: wrap;
-  }
-  .paid-display .paid-label { font-size: 13px; color: var(--text-light); font-weight: 600; }
-  .paid-display .paid-tag { font-size: 13px; color: var(--accent); background: rgba(45,106,79,0.1); padding: 3px 10px; border-radius: 6px; font-weight: 600; }
-  .paid-display .paid-input {
-    font-size: 20px; font-weight: 700; color: var(--primary);
-    border: 2px solid var(--primary-light); border-radius: 8px;
-    padding: 6px 12px; width: 130px; text-align: center; background: #fff;
-  }
-  .paid-display .paid-input:focus { outline: none; border-color: var(--primary); }
-  .paid-display .paid-extra { flex-basis: 100%; font-size: 13px; color: var(--text-light); border-top: 1px dashed var(--border); padding-top: 8px; margin-top: 4px; }
-  .paid-display .paid-extra strong { color: var(--accent); font-weight: 700; }
-  .paid-display .paid-extra .net-paid-badge {
-    display: inline-block; background: linear-gradient(135deg, var(--accent-light), var(--accent));
-    color: #fff; font-weight: 700; font-size: 14px; padding: 2px 10px; border-radius: 6px;
-  }
-  .paid-display .paid-extra .metric-new { color: var(--primary); font-weight: 700; }
-
   .promo-toggles-row { display: flex; gap: 16px; flex-wrap: wrap; grid-column: 1 / -1; align-items: flex-end; }
   .promo-toggles-row .field { flex: 0 0 auto; min-width: 100px; }
 
@@ -325,27 +301,64 @@
     background: var(--gift-bg); border-radius: 6px;
   }
   .discount-tier-summary strong { color: var(--primary); }
-  .dt-row { display: flex; align-items: center; gap: 6px; margin-bottom: 4px; }
-  .dt-row .t-label { font-size: 12px; color: var(--text-light); white-space: nowrap; }
-  .dt-row input[type=number] { width: 70px; }
-  .add-dt-btn {
-    font-size: 12px; color: var(--primary); background: none; border: 1px dashed var(--primary-light);
-    border-radius: 6px; padding: 4px 12px; cursor: pointer; margin-top: 4px;
+
+  /* 统一价格输入块（单折扣 & 多档共用） */
+  .price-block {
+    grid-column: 1 / -1; background: #faf8f3; border-radius: 10px; padding: 12px 14px; margin-bottom: 4px;
   }
-  .add-dt-btn:hover { background: var(--gift-bg); }
-  .discount-toggle-inline {
-    font-size: 12px; color: var(--text-light); cursor: pointer; margin-left: 8px;
+  .price-block-bar {
+    display: flex; align-items: center; gap: 10px; flex-wrap: wrap;
+  }
+  .block-title { font-size: 13px; font-weight: 600; color: var(--text); }
+  .pb-field { display: flex; align-items: center; gap: 4px; }
+  .pb-label { font-size: 12px; color: var(--text-light); white-space: nowrap; }
+  .pb-input {
+    width: 64px; border: 1px solid var(--border); border-radius: 6px;
+    padding: 5px 8px; font-size: 14px; text-align: center; background: #fff;
+  }
+  .pb-input:focus { outline: none; border-color: var(--primary); }
+  .pb-unit { font-size: 12px; color: var(--text-light); }
+  .switch-link {
+    font-size: 12px; color: var(--primary); cursor: pointer; margin-left: auto;
     text-decoration: underline; white-space: nowrap;
   }
-  .tier-discount-block {
-    grid-column: 1 / -1; background: var(--gift-bg); border-radius: 8px; padding: 10px 12px;
+  .switch-link:hover { color: var(--primary-dark); }
+
+  /* 多档行 */
+  .tier-rows { margin-top: 8px; }
+  .dt-row {
+    display: flex; align-items: center; gap: 6px; margin-bottom: 6px;
   }
-  .tier-discount-header {
-    display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px;
+  .dt-row input {
+    border: 1px solid var(--border); border-radius: 6px; padding: 5px 8px;
+    font-size: 13px; text-align: center; background: #fff;
   }
-  .tier-discount-header .td-label {
-    font-size: 13px; font-weight: 600; color: var(--text);
+  .dt-row input:focus { outline: none; border-color: var(--primary); }
+  .dt-row .t-label { font-size: 12px; color: var(--text-light); white-space: nowrap; }
+  .add-dt-btn {
+    font-size: 12px; color: var(--primary); background: none; border: 1px dashed var(--primary-light);
+    border-radius: 6px; padding: 4px 12px; cursor: pointer; margin-top: 2px; margin-bottom: 8px;
   }
+  .add-dt-btn:hover { background: rgba(199,91,57,0.06); }
+
+  /* 结果显示区（两种模式统一） */
+  .block-summary {
+    font-size: 13px; color: var(--text); margin-top: 8px; padding: 6px 10px;
+    background: var(--gift-bg); border-radius: 6px;
+  }
+  .block-summary strong { color: var(--primary); font-weight: 600; }
+  .block-result {
+    font-size: 14px; margin-top: 8px; color: var(--text); line-height: 1.6;
+  }
+  .block-metrics {
+    font-size: 12px; color: var(--text-light); margin-top: 2px; line-height: 1.6;
+  }
+  .block-metrics strong { color: var(--text); }
+  .net-paid-badge {
+    display: inline-block; background: var(--accent); color: #fff; padding: 1px 8px;
+    border-radius: 4px; font-size: 12px; font-weight: 600;
+  }
+  .metric-new { color: var(--primary); font-weight: 600; }
 
   @media (max-width: 600px) {
     .header h1 { font-size: 18px; }
@@ -521,15 +534,20 @@ function removeDiscountTier(shopIdx, tIdx) {
 }
 function updateDiscountTier(shopIdx, tIdx, field, value) {
   state.shops[shopIdx].discountTiers[tIdx][field] = value;
-  // 局部刷新摘要，不重建DOM
-  const shop = state.shops[shopIdx];
-  const valid = shop.discountTiers.filter(t => parseFloat(t.discount) > 0 && parseFloat(t.amount) > 0);
-  // 更新实付显示区
+  // 局部刷新，不重建DOM（避免输入框失焦）
   updatePaidDisplay(shopIdx);
-  // 更新折扣档摘要
-  const summaryEl = card => card.querySelector('.discount-tier-summary');
-  // 直接重建卡片更可靠（档位数据变了）
-  renderShops(); renderResults(); save();
+  // 局部刷新多档摘要
+  const sumEl = document.getElementById(`dt-summary-${shopIdx}`);
+  if (sumEl) {
+    const shop = state.shops[shopIdx];
+    const comp = computeShop(shop);
+    if (comp) {
+      sumEl.innerHTML = `实付总价 <strong>¥${comp.paid.toFixed(2)}</strong> · 综合折扣 <strong>${fmtDiscount(comp.labelDiscount)}</strong>`;
+    } else {
+      sumEl.textContent = '填写档位后自动计算';
+    }
+  }
+  renderResults(); save();
 }
 
 // ===== 满减档位 =====
@@ -599,13 +617,11 @@ function updatePaidDisplay(i) {
   const tagEl = document.getElementById(`paid-actual-${i}`);
   if (tagEl) {
     if (comp) {
-      tagEl.innerHTML = `标价${labelStr} → 实际<strong style="color:var(--accent)">${fmtDiscount(comp.realDiscount)}</strong>`;
-      tagEl.style.display = '';
+      tagEl.innerHTML = `标价${labelStr} → 实际<strong style="color:var(--accent);font-size:15px">${fmtDiscount(comp.realDiscount)}</strong>`;
     } else if (labelStr) {
       tagEl.textContent = `标价${labelStr}`;
-      tagEl.style.display = '';
     } else {
-      tagEl.style.display = 'none';
+      tagEl.textContent = '填写价格后自动计算';
     }
   }
 
@@ -613,9 +629,9 @@ function updatePaidDisplay(i) {
   if (extraEl) {
     if (comp) {
       const mjStr = comp.manJianTotal > 0 ? `满减¥${comp.manJianTotal.toFixed(2)} → 净付<span class="net-paid-badge">¥${comp.netPaid.toFixed(2)}</span> · ` : '';
-      extraEl.innerHTML = `${mjStr}每P均价 <strong>¥${comp.pricePerP.toFixed(2)}</strong> · 综合折后每P实付 <span class="metric-new">¥${comp.effectivePaidPerP.toFixed(2)}</span> · 物品总值<strong>¥${comp.totalValue.toFixed(2)}</strong>`;
+      extraEl.innerHTML = `${mjStr}每P <strong>¥${comp.pricePerP.toFixed(2)}</strong> · 综合每P <span class="metric-new">¥${comp.effectivePaidPerP.toFixed(2)}</span> · 物品总值<strong>¥${comp.totalValue.toFixed(2)}</strong>`;
     } else {
-      extraEl.textContent = '填写实付总价和折扣后显示';
+      extraEl.textContent = '';
     }
   }
 }
@@ -681,28 +697,26 @@ function renderShops() {
     const card = document.createElement('div');
     card.className = 'shop-card';
 
-    // 实付总价/折扣输入区
+    // 实付总价/折扣输入区 — 单折扣和多档使用统一的 price-block 结构
     const comp = computeShop(shop);
     const tierMode = shop.discountTierEnabled && shop.discountTiers && shop.discountTiers.length > 0;
     const labelStr = tierMode
       ? (comp ? fmtDiscount(comp.labelDiscount) : '')
       : (parseFloat(shop.discount) > 0 ? parseFloat(shop.discount) + '折' : '');
-    const actualTagStr = comp
-      ? `标价${labelStr} → 实际<strong style="color:var(--accent)">${fmtDiscount(comp.realDiscount)}</strong>`
-      : (labelStr ? `标价${labelStr}` : '');
     const mjStr = comp && comp.manJianTotal > 0 ? `满减¥${comp.manJianTotal.toFixed(2)} → 净付<span class="net-paid-badge">¥${comp.netPaid.toFixed(2)}</span> · ` : '';
-    const extraStr = comp
-      ? `${mjStr}每P均价 <strong>¥${comp.pricePerP.toFixed(2)}</strong> · 综合折后每P实付 <span class="metric-new">¥${comp.effectivePaidPerP.toFixed(2)}</span> · 物品总值<strong>¥${comp.totalValue.toFixed(2)}</strong>`
-      : (tierMode ? '填写折扣档位后显示' : '填写实付总价和折扣后显示');
+    const resultStr = comp
+      ? `标价${labelStr} → 实际<strong style="color:var(--accent);font-size:15px">${fmtDiscount(comp.realDiscount)}</strong>`
+      : (labelStr ? `标价${labelStr}` : '填写价格后自动计算');
+    const metricsStr = comp
+      ? `${mjStr}每P <strong>¥${comp.pricePerP.toFixed(2)}</strong> · 综合每P <span class="metric-new">¥${comp.effectivePaidPerP.toFixed(2)}</span> · 物品总值<strong>¥${comp.totalValue.toFixed(2)}</strong>`
+      : '';
 
-    // 单折扣模式：实付总价 + 折扣输入
-    // 多档模式：多档输入区 + 自动汇总（替换实付总价和折扣）
     let topSection;
     if (tierMode) {
       const tierRows = (shop.discountTiers||[]).map((t, ti) => `
         <div class="dt-row">
-          <input type="text" value="${escapeAttr(t.name||'')}" placeholder="品类名" oninput="updateDiscountTier(${i},${ti},'name',this.value)" style="width:70px">
-          <input type="text" inputmode="decimal" value="${t.discount||''}" placeholder="7" oninput="updateDiscountTier(${i},${ti},'discount',this.value)" style="width:50px">
+          <input type="text" value="${escapeAttr(t.name||'')}" placeholder="品类名" oninput="updateDiscountTier(${i},${ti},'name',this.value)" style="width:72px">
+          <input type="text" inputmode="decimal" value="${t.discount||''}" placeholder="7" oninput="updateDiscountTier(${i},${ti},'discount',this.value)" style="width:48px">
           <span class="t-label">折</span>
           <input type="text" inputmode="decimal" value="${t.amount||''}" placeholder="100" oninput="updateDiscountTier(${i},${ti},'amount',this.value)" style="width:60px">
           <span class="t-label">元</span>
@@ -710,19 +724,28 @@ function renderShops() {
         </div>`).join('');
       const sumStr = comp ? `实付总价 <strong>¥${comp.paid.toFixed(2)}</strong> · 综合折扣 <strong>${fmtDiscount(comp.labelDiscount)}</strong>` : '填写档位后自动计算';
       topSection = `
-        <div class="tier-discount-block">
-          <div class="tier-discount-header">
-            <span class="td-label">折扣明细</span>
-            <span class="discount-toggle-inline" onclick="updateShop(${i},'discountTierEnabled',false)">← 返回单一折扣</span>
+        <div class="price-block">
+          <div class="price-block-bar">
+            <span class="block-title">折扣明细</span>
+            <span class="switch-link" onclick="updateShop(${i},'discountTierEnabled',false)">← 单一折扣</span>
           </div>
-          ${tierRows}
+          <div class="tier-rows">${tierRows}</div>
           <button class="add-dt-btn" onclick="addDiscountTier(${i})">+ 添加档位</button>
-          <div class="discount-tier-summary">${sumStr}</div>
-          <span class="paid-tag" id="paid-actual-${i}" style="${actualTagStr?'':'display:none'}">${actualTagStr}</span>
-          <span class="paid-extra" id="paid-extra-${i}">${extraStr}</span>
+          <div class="block-summary" id="dt-summary-${i}">${sumStr}</div>
+          <div class="block-result"><span id="paid-actual-${i}">${resultStr}</span></div>
+          <div class="block-metrics" id="paid-extra-${i}">${metricsStr}</div>
         </div>`;
     } else {
-      topSection = `<div class="paid-display"><span class="paid-label">实付总价</span><input type="text" inputmode="decimal" class="paid-input" value="${shop.actualPaid}" placeholder="如200" oninput="updateShop(${i},'actualPaid',this.value)"><span class="paid-tag" id="paid-actual-${i}" style="${actualTagStr?'':'display:none'}">${actualTagStr}</span><span class="paid-extra" id="paid-extra-${i}">${extraStr}</span></div>`;
+      topSection = `
+        <div class="price-block">
+          <div class="price-block-bar">
+            <div class="pb-field"><span class="pb-label">实付总价</span><input type="text" inputmode="decimal" class="pb-input" value="${shop.actualPaid}" placeholder="200" oninput="updateShop(${i},'actualPaid',this.value)"><span class="pb-unit">¥</span></div>
+            <div class="pb-field"><span class="pb-label">折扣</span><input type="text" inputmode="decimal" class="pb-input" value="${shop.discount}" placeholder="8" oninput="updateShop(${i},'discount',this.value)"><span class="pb-unit">折</span></div>
+            <span class="switch-link" onclick="updateShop(${i},'discountTierEnabled',true)">多档折扣</span>
+          </div>
+          <div class="block-result"><span id="paid-actual-${i}">${resultStr}</span></div>
+          <div class="block-metrics" id="paid-extra-${i}">${metricsStr}</div>
+        </div>`;
     }
 
     // 满赠区域
